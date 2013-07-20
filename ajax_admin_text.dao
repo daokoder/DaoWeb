@@ -1,0 +1,83 @@
+
+load web_label
+load web_page
+load web_commit
+
+
+io.writeln( 'content-type: text/html\n' );
+
+edit = HTTP_POST.has( 'edit' ) ? (int) HTTP_POST['edit'] : 0;
+blog = HTTP_POST.has( 'blog' );
+forum = HTTP_POST.has( 'forum' );
+title = HTTP_POST.has( 'title' ) ? HTTP_POST['title'] : '';
+name = HTTP_POST.has( 'name' ) ? HTTP_POST['name'] : '';
+
+uid = User::Current.uid;
+if( uid ==0 || (uid != space_owner.uid && uid != 9) ){ # fu
+	io.writeln( dict_lang[ 'not_permitted' ] );
+	return;
+}else if( edit ==0 ){
+	io.writeln( dict_lang[ 'not_exist' ] );
+	return;
+}
+
+tokens = label_string.split( ";" );
+labeling = {};
+nolabeling = {};
+for( tok in tokens ){
+	tks = tok.split( ":" );
+	if( tks.size() >=2 ){
+		if( tks[1] == 'true' ){
+			labeling.append( tks[0] );
+		}else{
+			nolabeling.append( tks[0] );
+		}
+	}
+}
+text = Text{};
+sptx = SpaceText{};
+web_database.Select( Text ).Where().EQ( 'tid', edit ).QueryOnce( text );
+if( text.name != name ){
+	if( HTTP_POST.has( 'create_version' ) ){
+		Text::Commit( text.title, text.source, '','', name, '', 0,0,0, text.uid_space, text.uid_author );
+		web_database.Select( Text ).Where().EQ( 'name' ).Bind( name ).QueryOnce( text );
+		tv = TextVersion{ edit, text.tid, name };
+		web_database.Insert( tv );
+		edit = text.tid;
+	}
+}
+
+web_database.Select( Text, Text.title_index, SpaceText, 3 )
+	.Where().EQ( Text, 'tid', edit ).Match( Text, SpaceText, 'tid' ).QueryOnce( text, sptx );
+AddLabeling( space_owner.uid, text.stid, labeling, blog, forum );
+RemoveLabeling( space_owner.uid, text.stid, nolabeling, blog, forum );
+
+if( text.title != title ){
+	web_database.Update( Text ).Set( 'title' ).Where().EQ( 'tid', edit ).Bind( title ).QueryOnce();
+}
+
+if( text.name != name ){
+	if( web_database.Select( Text, Text.title_index ).Where().EQ( 'name' )
+			.NE( 'tid', edit ).Bind( name ).QueryOnce( text ) ){
+		io.writeln( dict_lang[ 'info_page_exist_not_renamed' ].expand( {'name'=>name}, '@' ) );
+		return;
+	}
+	web_database.Update( Text ).Set( 'name' ).Where().EQ( 'tid', edit ).Bind( name ).QueryOnce();
+	web_database.Update( SpaceText ).Set( 'name' ).Where().EQ( 'tid', edit ).Bind( name ).QueryOnce();
+}
+if( sptx.blog != blog || sptx.forum != forum )
+	web_database.Update( SpaceText ).Set( 'blog', blog ).Set( 'forum', forum )
+	.Where().EQ( 'tid', edit ).QueryOnce();
+
+if( HTTP_POST.has( 'reformat_text' ) ){
+	parser = Sdml2Html();
+	web_database.Select( Text ).Where().EQ( 'tid', edit ).QueryOnce( text );
+	frame{
+		defer { recover() }
+		parser.Parse( text.source );
+		hd = web_database.Update( Text ).Set( 'preface', parser.preface.size() )
+			.Set( 'brief' ).Set( 'content' ).Where().EQ( 'tid', edit );
+		hd.Bind( parser.brief, 0 ).Bind( parser.output, 1 );
+		hd.QueryOnce();
+	}
+}

@@ -1,0 +1,151 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>@(title)</title>
+<meta name="author" content="@(author)" />
+<meta name="keywords" content="@(keywords)" />
+<meta name="description" content="@(description)" />
+<meta charset="@(charset)" />
+<link href="/css/@(css_basic)" rel="stylesheet" type="text/css" />
+<script src="/javascripts/@(js_basic)"></script>
+<link rel="SHORTCUT ICON" href="/images/favicon.ico">
+<link href="/space/@(space)/rss" type="application/rss+xml" rel="alternate" title="RSS Feed" />
+<link href="https://plus.google.com/116928024969122793495/" rel="publisher" />
+</head>
+<script type="text/javascript">
+
+var _gaq = _gaq || [];
+_gaq.push(['_setAccount', 'UA-7861734-1']);
+_gaq.push(['_trackPageview']);
+
+(function() {
+ var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+ ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+ var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+ })();
+
+</script>
+<!-- Place this tag in your head or just before your close body tag -->
+<script type="text/javascript" src="https://apis.google.com/js/plusone.js"></script>
+<body onload="@(onload)">
+<input type="hidden" id="space_id" value="@(space_id)"/>
+<input type="hidden" id="space" value="@(space)"/>
+<div class="prompt"> <div id="message_box" class="prompt">
+<div id="message_text"></div><br>
+<input type="button" value="@(close)" onclick="HidePrompt( 'message_box' );"/>
+</div> </div>
+
+
+<div id="login_div" style="color:#FFF;background-color:#678;text-align:right;display:none"
+onKeyPress="if( event && event.keyCode == 13 ) if( document.getElementById('password2') == null ) Login(); else Signup();">
+<form id="login_form" method="post" action="#" >
+	<input type="hidden" id="lang_confirm" value="$(confirm)"/>
+	<span id="status_message" style="color:#F99;margin-right:10pt"></span>
+	$(user)<input type="text" id="username" value="" style="max-width:120pt"/>
+	$(password)<input type="password" id="password" value="" style="max-width:120pt"/>
+	<span id="confirm_password"></span>
+	<span id="confirm_password2"></span>
+	<input id="a_random_string" type="button" value="$(login)" onclick="Login()"/>
+	<input id="a_random_string" type="button" value="$(signup)" onclick="Signup()"/>
+	<a href="/help/account" style="color:#FFF">$(Account) $(help)?</a>
+</form>
+</div>
+
+<table width="100%" style="background-color:#567;">
+<tr>
+<td style="text-align:left">
+<!-- Place this tag where you want the badge to render-->
+<a href="https://plus.google.com/116928024969122793495/?prsrc=3" style="text-decoration: none;"><img src="https://ssl.gstatic.com/images/icons/gplus-32.png" width="32" height="32" style="border:0;"/></a>
+<!-- Place this tag where you want the +1 button to render -->
+<g:plusone></g:plusone>
+</td>
+<td style="text-align:right">
+
+<span style="color:#fff;margin-right:10pt;display:@(show-user)">
+( <a style=font-weight:bold;color:#DFC;">@(user)</a> )</span>
+<a style="color:#fff;margin-right:10pt;display:@(show-login-signup)" onclick="document.getElementById('login_div').style.display='block'">
+$(login_or_signup)
+</a>
+<a style="color:#fff;margin-right:10pt;display:@(show-logout)" onclick="Logout()">
+$(logout)
+</a>
+
+<input type="button" onclick="ChangeLanguage('zh_cn')"
+style="background: url(/images/flag_cn.png); width: 42px; height: 28px;"
+title="$(chinese_interface)">
+<a href="?lang=zh_cn"></a>
+<input type="button" onclick="ChangeLanguage('en_uk')"
+style="background: url(/images/flag_uk.png); width: 42px; height: 28px;"
+title="$(english_interface)">
+<a href="?lang=en_uk"></a>
+<a href="/space/@(space)/rss"><img src="/images/rss.png" style="margin-left:5pt;margin-right:5pt"/></a>
+
+</td>
+</tr>
+</table>
+
+<table width="100%" style="background-color: #456;">
+<tr>
+<td width="20%">
+<div style="margin-left:20pt;text-align:right">
+<a href="/"><img src="/images/@(heading-logo)"/></a>
+</div>
+</td>
+<td width="50%">
+<div style="min-width:450pt;max-width:800pt;">
+<table style="font-family:Arial;font-weight:bold;font-size:28pt;color:#FFF;display:inline">
+<tr><td>
+@(heading-title)
+</td></tr>
+<tr><td style="font-style:italic;font-weight:normal;font-size:20pt;color:#CCC;text-align:right;">
+<div style="margin-top:8pt">
+@(heading-subtitle)
+</div>
+</td></tr>
+</table>
+
+<p style="font-family:Arial;font-size:18pt;color:#FFF;margin-left:20pt">
+@(heading-outline)
+</p> 
+</div>
+</td>
+<td width="30%">
+<div>
+@(heading-sample)
+</div>
+</td>
+</tr>
+</table>
+
+<div style="text-align:center;background-color:#ABC;padding-top:5pt;padding-bottom:5pt">
+@(top)
+</div>
+
+<div style="text-align:center;background-color:#BCD;padding-top:5pt;padding-bottom:5pt;display:@(show-action)">
+@(action)
+</div>
+
+<table width="100%" style="min-height:480pt">
+<tr>
+<td width="25%" style="background-color:#E4EAF8;vertical-align:top">
+<div style="margin-left:20pt;margin-right:10pt">
+@(side)
+</div>
+</td>
+<td width="75%" style="vertical-align:top">
+<div style="margin-top:10pt;margin-left:10pt;margin-right:20pt;max-width:800pt;">
+@(center)
+</div>
+</td>
+</tr>
+</table>
+
+<div style="background-color:#BCD;">
+<table><tr>
+<td><a href="http://www2.clustrmaps.com/counter/maps.php?url=http://daovm.net" id="clustrMapsLink"><img src="http://www2.clustrmaps.com/counter/index2.php?url=http://daovm.net" style="border:0px;" alt="Visitor Map" title="Locations of visitors to this page" id="clustrMapsImg" onerror="this.onerror=null; this.src='http://clustrmaps.com/images/clustrmaps-back-soon.jpg'; document.getElementById('clustrMapsLink').href='http://clustrmaps.com';" /></a></td>
+@(bottom)
+</tr></table>
+</div>
+
+</body>
+</html>

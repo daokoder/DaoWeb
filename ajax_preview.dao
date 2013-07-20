@@ -1,0 +1,17 @@
+
+load web_text
+load sdml_html;
+
+io.writeln( 'content-type: text/html\n\n' );
+
+source = '';
+if( HTTP_POST.has( 'source' ) ) source += HTTP_POST['source'];
+
+parser = Sdml2Html();
+html = parser.Parse( source );
+wiki = CompleteText( 2, html, "", 0 )
+io.writeln( wiki );
+
+#io::stderr.writeln( parser.linebreak, parser.output )
+#io.writeln( HTTP_POST, HTTP_ENV );
+

@@ -1,0 +1,109 @@
+
+load web.cgi
+load web_lang;
+load web_config
+
+if( WEB_DEBUG ) io::stderr.writeln( HTTP_GET )
+
+uri = HTTP_ENV.has( 'REQUEST_URI' ) ? HTTP_ENV[ 'REQUEST_URI' ] : '/';
+
+ajax_servers =
+{
+	'ajax_signup' ->1,
+	'ajax_login'  ->1,
+	'ajax_logout' ->1,
+	'ajax_server' ->1,
+}
+
+# Rewrite URI for main space pages:
+caps = uri.capture( '^ / (%w+) ($|/)' );
+
+if( caps.size() and caps[1] == 'iframe' ) return std::load( 'web_iframe.dao' );
+
+# Serve static files:
+# This is a fallback support!
+# For efficiency, the web server should be configured such that
+# the URI to static files are not rewritten to invoke this script!
+if( caps.size() and WEB_DIRS.has( caps[1] ) ) return std::load( 'web_file.dao' );
+
+if( caps.size() and ajax_servers.has( caps[1] ) ) return std::load( caps[1] + '.dao' )
+
+if( caps.size() and caps[1] != 'space' and caps[1] != 'dao' ) uri = '/dao' + uri;
+
+nonwikis =
+{
+	'page'   =>1,
+	'thread' =>1,
+	'blog'   =>1,
+	'forum'  =>1,
+	'user'   =>1,
+	'image'  =>1,
+	'rss'    =>1,
+	'edit'   =>1,
+	'reply'  =>1,
+	'admin'  =>1,
+	'help'   =>1,
+}
+withparams =
+{
+	'page'   =>1,
+	'thread' =>1,
+	'image'  =>1,
+	'edit'   =>1,
+	'reply'  =>1,
+	'help'   =>1,
+}
+
+# Rewrite URI for language specific pages:
+caps = uri.capture( '^ (/dao/ (%w+)) ($|/%W*)' );
+if( caps.size() and not nonwikis.has( caps[2] ) ) uri = caps[1] + '_' + language + caps[3];
+
+# document_en_1.1
+caps = uri.capture( '^ / (%w+) ( $ | / (%w+) ($ | / | / ([.%w]+) ( $ | / ([.%w]*) ) ) )' )
+if( caps ){
+	if( caps[1] == 'space' ){
+		caps.pop( $front )
+		caps.pop( $front )
+	}
+	HTTP_GET[ 'space' ] = caps[1];
+	if( nonwikis.has( caps[3] ) ){
+		HTTP_GET[ caps[3] ] = '';
+		if( %caps > 5 ){
+			if( caps[3] == 'blog' ) HTTP_GET[ 'archive' ] = caps[5]
+			if( withparams.has( caps[3] ) ) HTTP_GET[ caps[3] ] = caps[5]
+		}
+	}else{
+		HTTP_GET[ 'page' ] = caps[3];
+	}
+}
+
+if( HTTP_GET.has( 'edit' ) or HTTP_GET.has( 'reply' ) ){
+	return std::load( 'web_edit.dao' );
+
+}else if( HTTP_GET.has( 'blog' ) ){
+	return std::load( 'web_blog.dao' )
+
+}else if( HTTP_GET.has( 'page' ) ){
+	return std::load( 'web_wiki.dao' )
+
+}else if( HTTP_GET.has( 'forum' ) ){
+	return std::load( 'web_forum.dao' )
+
+}else if( HTTP_GET.has( 'thread' ) ){
+	return std::load( 'web_thread.dao' )
+
+}else if( HTTP_GET.has( 'rss' ) ){
+	return std::load( 'web_rss.dao' );
+
+}else if( HTTP_GET.has( 'image' ) ){
+	return std::load( 'web_image.dao' );
+
+}else if( HTTP_GET.has( 'help' ) ){
+	return std::load( 'web_help.dao' )
+
+}else if( HTTP_GET.has( 'admin' ) ){
+	return std::load( 'web_admin.dao' )
+}
+
+HTTP_GET['page'] = 'home_' + language
+return std::load( 'web_wiki.dao' )

@@ -1,0 +1,12 @@
+
+load web_data
+load web_label
+
+
+tables = { User, UserInfo, Online, Text, Revision, Hit,
+	TextStat, Visit, VisitStat, City, IPv4City, Image, Label,
+	SpaceText, TextLabeling, LastEditing, TextVersion, TextHit };
+
+for( table in tables ) web_database.CreateTable( table );
+
+

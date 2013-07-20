@@ -1,0 +1,322 @@
+
+load web_user
+load web_text
+load web_label
+
+global url_base  = "/space/" + space_owner.username;
+global url_base2 = "/space/" + space_owner.username;
+
+global url_map = { 
+	"space"     => space_owner.username, 
+	"username"  => User::Current.username,
+	"url_base"  => url_base,
+	"url_base2" => url_base2
+};
+
+
+
+
+global top_menu_list = { ( "", "", "" ) }; 
+
+if( space_owner.uid > 1 and space_owner.username != WEB_SPACE ){
+	top_menu_list = {
+		( "", "", "" ),
+		( "$(home)",   "@(url_base2)", "" ),
+		( "$(blog)",   "@(url_base2)/blog", "" ),
+		( "$(forum)",  "@(url_base2)/forum", "" ),
+		( "daovm.net", "http://daovm.net", "" )
+	};
+}else{
+	top_menu_list = {
+		( "", "", "" ),
+		( "$(home)",     "/", "" ),
+		( "$(document)", "/document", "" ),
+		( "$(download)", "/download", "" ),
+		( "$(blog)",     "/blog", "" ),
+		( "$(forum)",    "/forum", "" ),
+		( "$(projects)", "/projects", "" ),
+		( "$(demo)",     "/demo.html", "" ),
+	};
+}
+
+for( it in top_menu_list ) it[1] = it[1].expand( url_map, '@' );
+
+global action_list =
+{
+	( "$(action)",     "", "" ),
+	( "$(new_post)",   "@(url_base)/edit/blog", "" ),
+	( "$(new_page)",   "@(url_base)/edit/page", "" ),
+	( "$(set_labels)", "@(url_base)/edit/labels", "" ),
+	( "$(user_data)",  "/space/@(username)/edit/user", "" )
+};
+if( User::Current.username == 'dao' || User::Current.username == 'fu' )
+	action_list.append( ( "$(space_admin)", "/space/@(space)/admin", "" ) );
+
+for( it in action_list ) it[1] = it[1].expand( url_map, '@' );
+
+global label_list : list<label_t> = GetLabels( space_owner.uid );
+global label_string = "";
+if( HTTP_GETS.has( 'labels' ) or HTTP_POSTS.has( 'labels' ) ){
+	lbstr = HTTP_GETS.has( 'labels' ) ? HTTP_GETS[ 'labels' ] : HTTP_POSTS[ 'labels' ];
+	labels = {=>}
+	for( lbs in lbstr ){
+		tokens = lbs.split( ',' );
+		for( lb in tokens ) labels[ lb ] = 1;
+		if( label_string.size() ) label_string += ',';
+		label_string += lbs;
+	}
+	for( lab in label_list ){
+		if( labels.has( lab.name ) ) lab.checked = 'checked';
+	}
+}
+
+global text_counts : tuple<int,int,list<int>,list<int> > = (0,0,{},{});
+
+global archive_year  = 0; #ctime_now.year;
+global archive_month = 0; #ctime_now.month;
+global archive_day   = 0; #ctime_now.day;
+
+global calendar_year  = ctime_now.year;
+global calendar_month = ctime_now.month;
+global archive_date   = '';
+
+if( HTTP_GET.has( 'archive' ) ){
+	archive = HTTP_GET[ 'archive' ];
+	archive_day = 0;
+	archive_date = archive;
+	switch( archive.size() ){
+	case 4 :
+		archive_year = (int) archive;
+	case 5, 6 : 
+		archive_year  = (int) archive[:3];
+		archive_month = (int) archive[4:];
+	case 7, 8 : 
+		archive_year  = (int) archive[:3];
+		archive_month = (int) archive[4:5];
+		archive_day   = (int) archive[6:];
+	}
+	calendar_year = archive_year;
+	calendar_month = archive_month;
+}
+if( HTTP_GET.has( 'year' ) ){
+	archive_day = 0;
+	archive_year = (int) HTTP_GET[ 'year' ];
+	calendar_year = archive_year;
+	archive_date = HTTP_GET[ 'year' ];
+}
+if( HTTP_GET.has( 'month' ) ){
+	month = HTTP_GET[ 'month' ];
+	archive_month = (int) month;
+	calendar_month = archive_month;
+	if( archive_month < 10 ) archive_date += '0';
+	archive_date += month;
+}
+text_counts = GetTextStat( space_owner, calendar_year, calendar_month, 0 );
+#io.writeln( text_counts );
+
+global latest_blog = GetLatestText( space_owner, 1 );
+global latest_blogc = GetLatestText( space_owner, 2 );
+global latest_post = GetLatestText( space_owner, 3 );
+
+global forum_post_count = text_counts[1];
+global label_checked = 0;
+for( lab in label_list ){
+	if( lab.checked ) label_checked += 1;
+}
+if( label_string.size() && label_checked == 1 ){
+	forum_post_count = 0;
+	for( lab in label_list ){
+		if( lab.checked ) forum_post_count += lab.pcount;
+	}
+}
+
+
+
+
+routine MakeNews( blogs : list<news_t>, url_base='' ) 
+{
+	tpl = '@(time): <a href="@(url)">@(topic)</a>\n';
+	news = '';
+	date1 = '';
+	date2 = '';
+	i = 0;
+	n = blogs.size();
+	while( i < n ){
+		thd = blogs[i];
+		time = thd.time.match( '%d{4}%-%d%d%-%d%d' ).substring;
+		# minimum news of two dates:
+		if( date1 != '' and date1 != time and date2 != '' and date2 != time ) break;
+		news += '<div style="background-color:#' + (i%2 ? 'ECF2FC' : 'E6ECFA')
+		news += ';padding:5px">';
+		url = ( url=> url_base + '/thread/' + thd.tid, time=> time, topic=> thd.topic );
+		news += tpl.expand( url, '@' );
+		news += '</div>';
+		if( date1 == '' ) date1 = time;
+		if( time != date1 ) date2 = time;
+		++ i;
+	}
+	if( i >= 5 ) return news;
+	# minimum 4 news, otherwise include news of another date:
+	date3 = '';
+	while( i < n ){
+		thd = blogs[i];
+		thd.time = thd.time.match( '%d{4}%-%d%d%-%d%d' ).substring;
+		if( date3 !='' and date3 != thd.time ) break;
+		if( i ) news += '<div style="margin-top: 5px">';
+		url = ( url=> url_base + '/thread/' + thd.tid, time=> thd.time, topic=> thd.topic );
+		news += tpl.expand( url, '@' );
+		if( i ) news += '</div>';
+		date3 = thd.time;
+		++ i;
+	}
+	return news;
+}
+
+
+const temp_login = 
+@[html]
+@(items)
+<a href="@(url)" style="margin-left:10pt;margin-right:10pt;">@(name)</a>
+@[html]
+
+
+routine MakeMenu( template : string, menu : listst )
+{
+	template.trim();
+	if( menu.size() ==0 ) return "";
+	parts = template.split( "\n" );
+	if( parts.size() ==0 ) return "";
+	body = parts[0];
+	item = "";
+	title_p = "";
+	title_a = "";
+	if( parts.size() >1 ) item = parts[1];
+	if( parts.size() >2 ) title_p = parts[2];
+	if( parts.size() >3 ) title_a = parts[3];
+	if( body.size() ==0 || item.size() ==0 ) return "";
+	source = "";
+	if( menu[0][0].size() ){
+		kv = { "name" => menu[0][0], "url" => menu[0][1], "extra"=> menu[0][2] };
+		if( menu[0][1].size() && title_a.size() ){
+			source += title_a.expand( kv, "@" );
+		}else if( title_p.size() ){
+			source += title_p.expand( kv, "@" );
+		}
+	}
+	for( i = 1 : menu.size() -1 ){
+		mit = menu[i];
+		source += item.expand( { "name" => mit[0], "url" => mit[1], "extra"=>mit[2] }, "@" ) + "\n";
+	}
+	source = body.expand( { "items" => source }, "@" );
+	return source.expand( dict_lang, "$" );
+}
+
+routine MakeFrame( title : string, body = '', homepage = 0 )
+{
+	temp_topmenu = io.read( "::templates/topmenu.html" );
+	temp_sidemenu = io.read( "::templates/sitemap_" + language + ".html" );
+	temp_bottom = io.read( "::templates/about_" + language + ".html" );
+	temp_frame = io.read( "::templates/frame.html" );
+	temp_frame = temp_frame.expand( dict_lang, '$' )
+
+	headline = frame('Dao'){ io.read( "::settings/title_" + language + ".html" ).trim() }
+	subtitle = frame(''){ io.read( "::settings/subtitle_" + language + ".html" ).trim() }
+	outline  = ""
+	sample   = ""
+
+	if( homepage ){
+		outline = frame(''){ io.read( "::settings/outline_" + language + ".html" ).trim() }
+		sample  = frame(''){ io.read( "::settings/sample_" + language + ".html" ).trim() }
+
+		if( %sample ){
+			sample_elem = @[html]<pre style="max-width:320pt;margin-left:10pt;margin-right:20pt;background-color:#CDD;border: 3px dashed #465;padding:10pt;">@[html]
+			sample = sample_elem + sample + "</pre>"
+		}
+	}
+
+	frame_default = {
+		"title"       => title,
+		"author"      => dict_lang[ "dao_author" ],
+		"keywords"    => "",
+		"description" => "",
+		"charset"     => "utf-8",
+		"css_basic"   => "webdao.css",
+		"js_basic"    => "ajax.js",
+		"close"       => dict_lang[ "close" ],
+		"onload"      => "SetTimeZoneCookie()",
+		"space"       => space_owner.username,
+		"space_id"    => (string) space_owner.uid,
+
+		"heading-logo"     => homepage ? WEB_LOGO_HOME : WEB_LOGO_COMMON,
+		"heading-title"    => headline,
+		"heading-subtitle" => subtitle,
+		"heading-outline"  => outline,
+		"heading-sample"   => sample,
+	}
+
+	topmenu = MakeMenu( temp_topmenu, top_menu_list );
+
+	space = User::Current.username;
+	username = User::Current.fullname;
+	fullname = space_owner.fullname;
+	if( language == 'zh' ){
+		fullname.change( '[%w%s%.]+', '' );
+		username.change( '[%w%s%.]+', '' );
+	}else{
+		tks = fullname.split();  fullname = '';
+		for( tk in tks ) if( tk.size() <=2 ) fullname += tk;
+		tks = username.split();  username = '';
+		for( tk in tks ) if( tk.size() <=2 ) username += tk;
+	}
+	if( fullname == '' ) fullname = space_owner.fullname;
+	if( fullname == '' ) fullname = space_owner.username;
+	if( username == '' ) username = User::Current.fullname;
+	if( username == '' ) username = User::Current.username;
+
+	frame_default['top'] = topmenu
+	frame_default['bottom'] = '<td>' + temp_bottom + '</td>'
+	frame_default['center'] = %body ? body : title
+
+	action = '';
+	if( User::Current.uid ){
+		frame_default['show-login-signup'] = 'none'
+		frame_default['show-logout'] = 'inline'
+		frame_default['show-user'] = 'inline'
+		frame_default['user'] = User::Current.username #+ ' (#' + (string) User::Current.uid + ')'
+
+		action = MakeMenu( temp_login, action_list );
+	}else{
+		frame_default['show-login-signup'] = 'inline'
+		frame_default['show-logout'] = 'none'
+		frame_default['show-user'] = 'none'
+	}
+	frame_default['action'] = action
+	frame_default['show-action'] = %action ? 'block' : 'none'
+
+	titles = GetNewsTitles( space_owner );
+	news = '';
+	if( titles ){
+		news  = '<div style="font-weight:bold;margin-top:20pt;margin-bottom:10pt">';
+		news += dict_lang[ 'Latest News' ] + '</div>\n';
+		news += '<div style="margin-bottom:30pt;border:2px solid #D8DADD">'
+		news += MakeNews( titles, url_base2 );
+		news += '<div style="padding:5px;background-color:#E6EBF7">'
+		news += '<a href="' + url_base2 + '/blog/?labels=news">';
+		news += dict_lang[ 'more news' ] + '</a></div></div>\n';
+	}
+	frame_default['side'] = news + temp_sidemenu
+
+	return temp_frame.expand( frame_default, "@" );
+}
+
+
+routine MakePageStatus( count=0, create=0, edit=0 )
+{
+	status = '\n<div style="color:#666;border:thin solid #ddd;text-align:center;margin-top:100pt;">
+		$(viewed_count) @(count) $(times)<br/>\n$(created_at) @(create) GMT';
+	if( edit ) status += '<br/>$(modified_at) @(edit) GMT';
+	status += '</div>';
+	status = status.expand( dict_lang );
+	kv = { 'count'=>(string)count, 'create' => FormatTime2( create ), 'edit'=> FormatTime2( edit ) };
+	return status.expand( kv, '@' );
+}

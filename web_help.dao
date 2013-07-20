@@ -1,0 +1,12 @@
+
+load web_page
+
+io.writeln( 'content-type: text/html\n\n' );
+
+htype = HTTP_GET[ 'help' ];
+title = dict_lang[ 'Account' ] + ' ' + dict_lang[ 'help' ];
+help = io.read( '::templates/help_account_' + language + '.html' );
+help = help.expand( dict_lang );
+help = help.expand( { 'host' => HTTP_ENV['HTTP_HOST'] }, '@' )
+io.writeln( MakeFrame( title, help ) );
+

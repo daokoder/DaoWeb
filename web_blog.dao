@@ -1,0 +1,152 @@
+
+
+load web_page
+
+routine GetBlogs( space : User, year=0, month=0, day=0, page=0, lablist : list<label_t> ={}, 
+		title=0 )
+{
+	member = 12;
+	if( title ) member = 11;
+	labids = {};
+	url = '';
+	for( lab in lablist ){
+		if( lab.checked == 'checked' ){
+			labids.append( lab.lid );
+			if( url ) url += '&';
+			url += 'labels=' + lab.name;
+		}
+	}
+	date1 = year * 10000 + month * 100 + day;
+	date2 = year * 10000 + month * 100 + 32;
+	date3 = year * 10000 + 13 * 100;
+	hd = web_database.Select( SpaceText, Text, member, TextLabeling, labids.size() ? 1:0 )
+		.Where().EQ( SpaceText, 'uid_space', space.uid );
+
+	if( labids.size() ){
+		hd.And().In( TextLabeling, 'lid', labids );
+		hd.Match( TextLabeling, SpaceText, 'tid' );
+	}
+	hd.EQ( SpaceText, 'blog', 1 );
+	if( day ){
+		hd.EQ( SpaceText, 'date_create', date1 );
+		if( url ) url += '&';
+		url += ('year=' + (string) year) + ('&month=' + (string) month) + ('&day=' + (string) day);
+	}else if( month ){
+		hd.GT( SpaceText, 'date_create', date1 ).LT( SpaceText, 'date_create', date2 );
+		if( url ) url += '&';
+		url += ('year=' + (string) year) + ('&month=' + (string) month);
+	}else if( year ){
+		hd.GT( SpaceText, 'date_create', date1 ).LT( SpaceText, 'date_create', date3 );
+		if( url ) url += '&';
+		url += ('year=' + (string) year);
+	}
+	hd.EQ( SpaceText, 'stid_reply', 0 ).Match( SpaceText, Text, 'tid' )
+		.Sort( SpaceText, 'time_create', 1 ).Range( 20, 20*page );
+	#io.writeln( hd.sqlstring() );
+	blogs : list<postthread> = {};
+	labs : list<list<label_t>> = {};
+	uid2name = { => };
+	txtlab = TextLabeling{};
+	label = Label{};
+	user = User{};
+	txt = Text{};
+	sptxt = SpaceText{};
+	while( hd.Query( sptxt, txt, txtlab ) ){
+		uid2name[ sptxt.uid_author ] = '';
+		#thd = (postthread)('','','','','','','','','','',0,'');
+		thd = postthread{'','','','','','','','','','',0,''};
+		thd.tid = (string) sptxt.stid;
+		thd.uid = (string) sptxt.uid_author;
+		thd.replies = (string) sptxt.count_reply;
+		thd.hits = (string) sptxt.hit_count;
+		thd.topic = txt.title;
+		thd.preface = txt.preface;
+		thd.time = FormatTime( sptxt.time_create );
+		if( sptxt.time_edit ) thd.modify = FormatTime( sptxt.time_edit );
+		content = txt.content;
+		content.change( '%B{ %< table %s class=toc %> }{ %< %/ table %>}', '' );
+		content = content[ : txt.preface-1 ];
+		if( content.size() < txt.content.size() ) content += ' ...';
+		thd.content = CompleteText( txt.stid, content, space.username );
+		blogs.append( thd );
+	}
+	hd.Done();
+#{
+#}
+	for( thd in blogs ){
+		hd = web_database.Select( TextLabeling, Label ).Where()
+			.EQ( TextLabeling, 'tid', thd.tid ).Match( TextLabeling, Label, 'lid' );
+		lbs = {};
+		while( hd.Query( txtlab, label ) ) lbs.append( label.AsTuple() );
+		labs.append( lbs );
+		hd.Done();
+	}
+	hd = web_database.Select( User ).Where().EQ( 'uid' );
+	for( uid in uid2name.keys() ){
+		if( hd.Bind( uid ).Query( user ) ) uid2name[ uid ] = user.username;
+	}
+	hd.Done()
+	for( thd in blogs ) thd.author = uid2name[ (int) thd.uid ];
+	return blogs, labs, url;
+}
+
+#io.writeln( GetBlogs(2, 2008,0,0,{(2,'','',1,1,'checked')}) );
+
+
+routine MakeBlogs( blogs : list<postthread>, labels : list<list<label_t> >, 
+		url_base='', current=0, page=0, urldata='' ) 
+{
+	template = io.read( "::templates/blog.html" );
+	parts = template.split( "<!--splitter-->\n" );
+	npart = parts.size();
+	if( npart <=2 ) return template;
+	url_map = { 'url_base' => url_base };
+	css = parts[0];
+	topic1 = parts[1].expand( dict_lang ).expand( url_map, '@' );
+	topic2 = parts[2].expand( dict_lang ).expand( url_map, '@' );
+	labtemp = parts[3].expand( dict_lang );
+	labcode = '';
+	#for( lab in labels ) labcode += labtemp.expand( lab, '@' );
+	#thd.labels = labcode;
+	source = "";
+
+	td1 = '<td style="font-size: 22pt; font-weight: bold; text-align: left">';
+	td2 = '<td style="font-size: 25pt; font-weight: bold; text-align: right">';
+	pageup = td1 + '<a href="$(url_base)/blog/?$(urldata)page=$(pageup)">&#8656;</a></td>';
+	pagedown = td2 + '<a href="$(url_base)/blog/?$(urldata)page=$(pagedown)">&#8658;</a></td>';
+	km = { 'url_base'=>url_base, 'urldata'=>urldata + (urldata ? '&' : ''),
+		'pageup'=>(string)(page-1), 'pagedown'=>(string)(page+1) }
+	source += '<table><tr>\n'
+	if( page ){
+		source += pageup.expand( km );
+	}
+	if( blogs.size() ){
+		source += pagedown.expand( km );
+	}
+	source += '</tr></table>\n'
+	edit = dict_lang[ "edit" ];
+	for( thd in blogs ){
+		url = { "url" => url_base + "/thread/" + thd.tid };
+		if( current == (int)thd.uid ) thd.edit = edit;
+		if( thd.modify.size() ){
+			source += topic2.expand( thd, "@" ).expand( url, '@' );
+		}else{
+			source += topic1.expand( thd, "@" ).expand( url, '@' );
+		}
+	}
+	return css + source;
+}
+
+
+
+io.writeln( 'content-type: text/html\n\n' );
+
+page = 0;
+if( HTTP_GET.has( 'page' ) ) page = (int) HTTP_GET['page'];
+
+data = GetBlogs( space_owner, archive_year, archive_month, archive_day, page, label_list );
+blogs = MakeBlogs( data[0], data[1], url_base2, User::Current.uid, page, data[2] );
+title = dict_lang[ 'blog_of' ].expand( { 'user'=>space_owner.fullname } );
+if( archive_date ) title += ' ' + archive_date;
+if( label_string ) title += ' [' + label_string + ']';
+io.writeln( MakeFrame( title, blogs ) );

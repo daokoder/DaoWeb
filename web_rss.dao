@@ -1,0 +1,141 @@
+
+load web_text
+
+
+routine MakeRSS( space : User, tid = 0, label = '' )
+{
+	rssname = label ? 'rss_' + label : 'rss';
+	format = "%W,%D-%M-%Y %H:%I:%S GMT";
+	temps = io.read( '::templates/rss.xml' ).split( '<!--splitter-->' );
+	header = temps[0];
+	channel = temps[1];
+	item = temps[2];
+	channels = { '', '', '' };
+	user = User{};
+	txt = Text{};
+	lab = Label{};
+	sptext = SpaceText{};
+	labeling = TextLabeling{};
+	time = time_now - month_in_seconds;
+	hd := none;
+	if( label )
+		hd = web_database.Select( SpaceText, 1, Text, Label, 1, TextLabeling );
+	else
+		hd = web_database.Select( SpaceText, 1, Text );
+	hd.Where().EQ( Text, 'uid_space', space.uid ).GT( Text, 'time_create', time )
+		.Match( SpaceText, Text, 'tid' ).EQ( SpaceText, 'stid_reply', 0 )
+		.EQ( SpaceText, 'blog', 1 )
+	if( label ){
+		hd.Match( Text, TextLabeling, 'tid' ).Match( TextLabeling, Label, 'lid' );
+		hd.EQ( Label, 'name', label );
+	}
+	hd.Sort( Text, 'time_create', 1 );
+	link = 'http://' + HTTP_ENV[ 'HTTP_HOST' ] + '/space/' + space.username;
+	count = 0;
+	while(1){
+		if( label ){
+			if( hd.Query( sptext, txt, lab, labeling ) == 0 ) break;
+		}else{
+			if( hd.Query( sptext, txt ) ==0 ) break;
+		}
+		count += 1;
+		link2 = link + '/thread/' + (string)txt.tid;
+		kv = { 'title' => txt.title, 'link' => link2, 'guid' => link2 };
+		desc = CompleteText( txt.stid, txt.content, space.username, 0 );
+		desc.change( '&', '&#38;' );
+		desc.change( '%<', '&lt;' );
+		desc.change( '%>', '&gt;' );
+		desc.change( '"', '&quot;' );
+		kv[ 'description' ] = desc;
+		kv[ 'pubDate' ] = GMTime( txt.time_create );
+		it = item.expand( kv, '@' );
+		if( txt.language == 'english' ){
+			channels[0] += it;
+		}else if( txt.language == 'chinese' ){
+			channels[1] += it;
+		}else{
+			channels[2] += it;
+		}
+	}
+	hd.Done();
+	body = '';
+	link += '&#38;' + rssname;
+	pubdate = GMTime( time_now - 2*month_in_seconds );
+	gmtime = GMTime( sys::time() );
+	kv = { 'pubDate' => pubdate, 'lastBuildDate' => gmtime, 'link' => link };
+	if( label == 'chinese' ){
+		kv[ 'language' ] = 'zh-cn';
+	}else{
+		kv[ 'language' ] = 'en-us';
+	}
+	kv[ 'title' ] = 'Dao Language';
+	kv[ 'description' ] = 'Dao Language';
+	kv[ 'link' ] = link + '&#38;lang=en_uk';
+	body += channel.expand( kv, '@' );
+	if( channels[0] ) body += channels[0];
+	kv[ 'title' ] = '道语言';
+	kv[ 'description' ] = '道语言';
+	kv[ 'link' ] = link + '&#38;lang=zh_cn';
+	if( channels[1] ) body += channels[1];
+	if( channels[2] ) body += channels[2];
+	body += '\n</channel>';
+	rss = header + body + '</rss>';
+	if( tid ){
+		web_database.Update( Text ).Set( 'time_edit', time_now ).Set('source').Set( 'content' )
+			.Where().EQ( 'tid', tid ).Bind( rss ).Bind( rss, 1 ).QueryOnce();
+	}else if( count ){
+		date = ctime_now.year * 10000 + ctime_now.month * 100 + ctime_now.day;
+		spacetext = SpaceText{ blog=>0, forum=>0, uid_space=>space.uid, 
+			uid_author=>space.uid, date_create=>date, time_create=>time_now, 
+			name=>rssname, stid_reply=>0 };
+		web_database.Insert( spacetext );
+		atext = Text{ stid=>spacetext.stid, uid_space=>space.uid, uid_author=>space.uid,
+			time_create=>time_now, preface=>0, name=>rssname, 
+			title=>'RSS', brief=>'', source=>'', content=>rss };
+		web_database.Insert( atext );
+		web_database.Update( SpaceText ).Set( 'stid_first', spacetext.stid )
+			.Set( 'tid', atext.tid ).Where().EQ( 'stid', spacetext.stid ).QueryOnce();
+		tid = atext.tid;
+	}
+#{
+	debug = io.open( '/winux/projects/Cybego/debug.txt', 'w' );
+	debug.println( header + body + '\n</rss>' );
+	debug.close();
+#}
+	return rss, tid;
+}
+
+routine GetRSS( space : User, label = '' )
+{
+	rssname = label ? 'rss_' + label : 'rss';
+	rss_time = 0;
+	blog_time = 0;
+	hd = web_database.Select( Text ).Where().EQ( 'uid_space', space.uid ).EQ( 'name' );
+	txt = Text{};
+	sptxt = SpaceText{};
+	if( hd.Bind( rssname ).QueryOnce( txt ) ){
+		rss_time = txt.time_edit ? txt.time_edit : txt.time_create;
+	}
+	rss = txt.content;
+
+	hd = web_database.Select( SpaceText ).Where().EQ( 'stid_reply', 0 ).EQ( 'blog', 1 )
+		.Sort( 'time_create', 1 ).Range( 1 );
+	if( hd.QueryOnce( sptxt ) ) blog_time = sptxt.time_edit ? sptxt.time_edit : sptxt.time_create;
+
+	if( txt.tid ==0 || rss == '' || (blog_time >= rss_time && blog_time + 600 < time_now) ){
+		( rss, tid ) = MakeRSS( space, txt.tid, label );
+		if( tid ) TextHit::Update( tid );
+	}else{
+		TextHit::Update( txt.tid );
+	}
+	return rss;
+}
+
+
+
+io.writeln( 'content-type: text/plain\n\n' );
+
+
+label = '';
+if( HTTP_GET.has( 'label' ) ) label = HTTP_GET[ 'label' ];
+io.writeln( GetRSS( space_owner, label ) );

@@ -1,0 +1,130 @@
+<style type="text/css">
+div.topicname {
+	background: #e4ffd4;
+	border-bottom: thin solid #d8e8c8;
+}
+div.postinfo {
+	font-style: italic;
+	text-align: right;
+}
+td.jumps {
+	font-weight: bold;
+	text-align: left;
+}
+table.postlist {
+	background: #E6E9EB;
+	padding: 2px;
+	border: 2px solid #D3D6D9;
+}
+table.postlist tr td {
+	border: thin solid #CDBFDC;
+	vertical-align: center;
+	background: #eeffee;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+table.postlist tr.even td.even {
+	border: thin solid #CDBFDC;
+	vertical-align: center;
+	background: #e0f0e0;
+	padding-left: 5px;
+	padding-right: 5px;
+}
+table.tworows tr td {
+	border: none;
+	vertical-align: center;
+	background: #eeffee;
+}
+table.postlist a {
+}
+th a { text-decoration: none; }
+div.divider {
+	background: #eeffd4;
+	border: 3px solid #d8e8c8;
+	font-size : 180%;
+	font-weight : bold;
+	margin-top : 5pt;
+	margin-bottom : 5pt;
+	padding: 5pt;
+}
+</style>
+<!--splitter-->
+<div class="divider">
+<table><tr>
+<td>$(forum)</td>
+<td style="font-size:16pt;text-align:right">
+<a href="@(url_space)/edit/forum" title="$(new_post)" class=bold>
+<img src="/images/new_post.jpg" width="30" height="20" title="$(new_post)"/>
+$(create_new_topic)
+</a>
+</td>
+</tr></table>
+</div>
+<div style="background: #e8eed8;border:2px solid #cda;padding:5pt"><span class=bold>$(labels):</span>
+<form name="labforum" action="@(url_forum)" method="get">
+@(labels)
+</form>
+</div>
+<div style="margin-top: 5pt;">
+<table class="postlist"><tr>
+<th width="95%" colspan=5>
+<div style="font-size: 18pt; font-weight: bold; margin-top: 10px; margin-bottom:10px;">
+<a href="@(first_page)" title="$(first_page)">&#8657;</a>
+<a href="@(page10_up)" title="$(10_pages_up)">&#8656;</a>
+<a href="@(page_up)" title="$(page_up)">&#8592;</a>
+<span style="font-size: 16pt">@(range) [ @(total) $(topics) ]</span>
+<a href="@(page_down)" title="$(page_down)">&#8594;</a>
+<a href="@(page10_down)" title="$(10_pages_down)">&#8658;</a>
+<a href="@(last_page)" title="$(last_page)">&#8659;</a>
+</div>
+</th>
+<th width="5%">
+<!--input type="button" value="" style="background: url(images/new_post.jpg) no-repeat center;"
+width="40" onclick="location.href='@(url_space)&edit=forum';"-->
+</th>
+</tr>
+<tr><td colspan=5></td></tr>
+<tr><th width="2%"><th width="60%">$(Topic)
+<th width="6%">$(Re)
+<th width="16%">$(created)<th width="16%">$(replied)
+@(postlist)
+</table>
+<table><tr>
+<td class="jumps">
+<a href="@(url_forum)size=25" title="$(25_topics_per_page)">25</a>
+<a href="@(url_forum)size=50" title="$(50_topics_per_page)">50</a>
+<a href="@(url_forum)size=100" title="$(100_topics_per_page)">100</a>
+<td>
+<!--td class="textright">
+<input type="button" value="$(fold)" onclick="Fold();"/>
+<input type="button" value="$(expand)" onclick="Expand();"/ -->
+</tr></table>
+</div>
+<!--splitter-->
+<tr @(even_style)>
+<td @(even_style)>@(labels)</td>
+<td @(even_style)><a href="@(url)">@(topic)</a></td>
+<td @(even_style) title="@(hits) $(hits)" style="text-align:center;">@(replies)</td>
+<td @(even_style) style="text-align:center;"><a href="/space/@(author)">@(author2)</a><br/>
+<span title="@(gmt_a)">@(time_a)</span></td>
+<td @(even_style) style="text-align:center;">---
+</td></tr>
+<!--splitter-->
+<tr @(even_style)>
+<td @(even_style)>@(labels)</td>
+<td @(even_style)><a href="@(url)">@(topic)</a></td>
+<td @(even_style) title="@(hits)$(hits)" style="text-align:center;">@(replies)</td>
+<td @(even_style) style="text-align:center;"><a href="/space/@(author)">@(author2)</a><br/>
+<span title="@(gmt_a)">@(time_a)</span></td>
+<td @(even_style) style="text-align:center;"><a href="/space/@(commenter)">@(commenter2)</a><br/>
+<span title="@(gmt_c)">@(time_c)</span>
+</td></tr>
+<!--splitter-->
+<span style="color:@(color); font-weight: bold; margin: 1px" title="@(name)">&Omicron;</span>
+<!--splitter-->
+<tr><td></td><td><div>&nbsp;</div></td><td></td><td></td><td></td></tr>
+<!--splitter-->
+<input type=checkbox name=labels value="@(name)" id="check_@(name)" 
+@(checked) onclick="document.labforum.submit();">
+<span style="color:@(color)"><label for="check_@(name)" class=bold>@(name)</label>&nbsp;</span>
+</input>

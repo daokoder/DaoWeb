@@ -1,0 +1,27 @@
+
+load web_user
+load web_commit
+
+if( not WEB_ADMINS.has( User::Current.username ) ) return
+
+
+tid = 0
+text = Text{};
+retrieve = web_database.Select( Text ).Where().GE( 'tid' ).Range( 1 )
+update = web_database.Update( Text ).Set( 'preface' ).Set( 'content' ).Where().EQ( 'tid' )
+
+while( retrieve.Bind( tid ).QueryOnce( text ) ){
+	frame {
+		defer {
+			if( e = recover(); e.size() ){
+				io::stderr.writeln( 'failed formating', text.tid, text.title )
+				io::stderr.writeln( 'with error:', e[0].info, e[0].data )
+			}
+		}
+		parser = Sdml2Html();
+		parser.Parse( text.source );
+		update.Bind( parser.preface.size(), 0 ).Bind( parser.output, 1 ).Bind( text.tid, 2 );
+		update.QueryOnce();
+	}
+	tid = text.tid + 1
+}

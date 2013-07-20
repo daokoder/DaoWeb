@@ -1,0 +1,37 @@
+<script src="/javascripts/edit_text.js"></script>
+<div id="admintext">
+<div>
+<h4>$(admin_text): #@(tid)<h4>
+</div>
+<form name="test" method="get" action="/ajax_server/?ajax=admin_text">
+<input id="tid_edit" type="hidden" name="text" value="@(tid)">
+<div style="background: #e8ffd8;border:thin solid #cea"><span>$(labels):</span>
+@(check_labels)
+</div>
+<table class="expand"><tr><td>
+$(title):</td><td>
+<input id="title" type="text" class="long" name="title" value="@(title)"/>
+</td></tr></table>
+<table class="expand"><tr><td width="20%">
+<input id="blog_post" type="checkbox" name="blog_post" @(check_blog)>$(blog_post)</input>
+</td><td width="20%">
+<input id="forum_post" type="checkbox" name="forum_post" @(check_forum)>$(forum_post)</input>
+</td><td align=right>
+$(page_name):<input id="page_name" type="text" name="page_name" value="@(name)" @(disable_page)/>
+</td></tr></table>
+<input id="reformat_text" type="checkbox" name="reformat_text" >$(redo_text_formatting)</input>
+<br/>
+<input id="create_version" type="checkbox" name="create_version" >$(create_version)</input>
+<div>
+<table class="expand"><tr>
+<td><input type="button" value="$(submit)" onclick="AdminText()"/>
+<td class="textright">
+<input type="button" value="$(discard)" onclick="location.reload(true);"/>
+</tr></table>
+</div>
+</form>
+</div>
+<!--splitter-->
+<input type=checkbox name=labels value="@(name)" id="check_@(name)" @(checked)>
+<span style="color:@(color)"><label for="check_@(name)">@(name)</label>&nbsp;</span>
+</input>

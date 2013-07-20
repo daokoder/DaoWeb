@@ -1,0 +1,39 @@
+
+#{
+Copyright (C) 2007-2013, Limin Fu
+License: GPL
+#}
+
+
+const WEB_SQLITE_DB = "sqlite database file";
+
+const WEB_DB_HOST = "localhost";
+const WEB_DB_USER = "database user";
+const WEB_DB_PWD  = "database password";
+const WEB_DB_NAME = "database name";
+
+const WEB_PWD_KEY = "password encryption key";
+
+const HTTP_ROOT = "path to www folder";
+
+const WEB_ROOT  = 'path to webdao folder'
+
+const WEB_SPACE = 'main space owner name'
+
+const WEB_ADMINS =
+{
+	'admin1' -> 1 ,
+	'admin2'  -> 1 ,
+}
+
+const WEB_DIRS =
+{
+	'css'         -> 1 ,
+	'images'      -> 1 ,
+	'javascripts' -> 1 ,
+}
+
+const WEB_LOGO_HOME   = 'major logo'
+const WEB_LOGO_COMMON = 'minor logo'
+
+const WEB_DEBUG = 0

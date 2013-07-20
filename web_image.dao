@@ -1,0 +1,30 @@
+
+load web_user
+
+name = ''; 
+size = 'medium';
+if( HTTP_GET.has( 'image' ) ) name = HTTP_GET[ 'image' ];
+if( HTTP_GET.has( 'size' ) ) size = HTTP_GET[ 'size' ];
+idmap = { 'small'=>7, 'medium'=>8, 'large'=>9 };
+
+if( name.size() ){
+   image = Image{};
+   hd = web_database.Select( Image, idmap[ size ] ).Where()
+      .EQ( 'space', space_owner.uid ).EQ( 'name' ).Bind( name );
+   if( hd.QueryOnce( image ) ){
+      io.writef( 'content-type: image/%s\n\n', image.format );
+      switch( size ){
+	  case 'small' : io.write( image.small );
+	  case 'large' : io.write( image.large );
+	  default : io.write( image.medium );
+      }   
+      return;
+   }   
+}
+
+io.write( 'content-type: image/jpeg\n\n' );
+if( name == 'myphoto' )
+   io.write( io.read( '::images/notphoto.jpg' ) );
+else
+   io.write( io.read( '::images/notfound.jpg' ) );
+

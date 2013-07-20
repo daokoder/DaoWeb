@@ -1,0 +1,53 @@
+<link href="label.css" rel="stylesheet" type="text/css" />
+<script src="/javascripts/edit_label.js"></script>
+<div id="edit_label">
+<h3>$(edit_labels)</h3>
+<input type="hidden" id="label_name" value=""/>
+<div class="prompt"> <div id="prompt_rename" class="prompt">
+<h3>$(rename_label)</h3>
+<div><input id="rename_edit" type="text" maxlength="50" style="width:80%"/></div>
+<input type="button" value="$(rename)" onclick="RenameLabel();"/>
+<input type="button" value="$(cancel)" onclick="HidePrompt( 'prompt_rename' );"/>
+</div> </div>
+<div class="prompt"> <div id="prompt_recolor" class="prompt">
+<table id="color_table" class="colorpanel"> </table>
+<input type="button" value="$(close)" onclick="HidePrompt( 'prompt_recolor' );"/>
+</div> </div>
+<div class="prompt"> <div id="prompt_remove" class="prompt">
+<div>$(are_you_sure)?</div>
+<input type="button" value="$(remove)" onclick="RemoveLabel();"/>
+<input type="button" value="$(cancel)" onclick="HidePrompt( 'prompt_remove' );"/>
+</div> </div>
+<table class="label_table">
+@(labels)
+<tr style="background:none"><td class="alignleft">
+<input id="new_label" type="text" maxlength="50" style="width:99%"/></td>
+<td><input type="button" value="$(create)" onclick="CreateLabel();"/></td></tr>
+</table>
+</div>
+<!--splitter-->
+<tr><td class="alignleft"><span style="color:@(color)">&#9830;@(name)</span></td>
+<td>
+<select name="@(name) row" id="@(name) row" value="@(row)" onchange="SetLabelRow( '@(name)' );">
+<option value="@(0)">0</option>
+<option value="@(1)">1</option>
+<option value="@(2)">2</option>
+<option value="@(3)">3</option>
+<option value="@(4)">4</option>
+<option value="@(5)">5</option>
+</select>
+</td>
+<td>
+<select name="@(name) sort" id="@(name) sort" value="@(sort)" onchange="SetLabelSort( '@(name)' );">
+<option value="$(0)">0</option>
+<option value="$(1)">1</option>
+<option value="$(2)">2</option>
+<option value="$(3)">3</option>
+<option value="$(4)">4</option>
+<option value="$(5)">5</option>
+</select>
+</td>
+<td><a class="button" onclick="ShowRenameLabel( 'prompt_rename', '@(name)' );">$(rename)</a></td>
+<td><a class="button" onclick="ShowRecolorLabel( 'prompt_recolor', '@(name)' );">$(recolor)</a></td>
+<td><a class="button" onclick="ShowRemoveLabel( '@(name)' );">$(remove)</a></td>
+</tr>

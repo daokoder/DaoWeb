@@ -1,0 +1,67 @@
+
+
+load web_page
+
+io.writeln( 'content-type: text/html\n\n' );
+
+edit = User::Current.uid == space_owner.uid or WEB_ADMINS.has( User::Current.username )
+admin = WEB_ADMINS.has( User::Current.username )
+
+tpl =
+@[html]
+<div style="float:right;border:2px solid #F00;padding:5px;background:#FDD">
+<a href="/space/@(space)/admin/text/@(tid)">Admin</a>
+</div>
+@[html]
+
+
+name = (string) HTTP_GET[ 'page' ];
+if( name == '' ) name = 'home_' + language
+p = GetPage( space_owner, name, edit );
+
+title = p[1];
+page = p[2];
+if( edit ){
+	if( p[0] ){
+		page ='<div><a href=\"' + url_base2 + '/edit/page/' + (string) p[0];
+		page += '\">' + dict_lang[ 'edit' ] + '</a></div>' + p[2];
+	}else{
+		page ='<div><a href=\"' + url_base2 + '/edit/page/' + name;
+		page += '\">' + dict_lang[ 'edit' ] + '</a></div>' + p[2];
+	}
+	kv = { 'space'=>space_owner.username, 'tid'=> (p[0] ? (string)p[0] : name) }
+	if( admin ) page = tpl.expand( kv, '@' ) + page
+}
+
+template = io.read( "::templates/thread.html" );
+parts = template.split( "<!--splitter-->\n" );
+npart = parts.size();
+if( npart > 1 ){
+	prompt = parts[1].expand( dict_lang );
+	prompt = prompt.expand( { 'space'=>space_owner.username }, '@' );
+	page = prompt + page;
+}
+item = '<span style="padding-left:20px"><a href="' + url_base2 + '/page/$(page)">$(version)</a></span>';
+vnames = GetVersion( p[6] );
+vinfo = '';
+if( vnames ){
+	vinfo = dict_lang[ 'other_versions' ] + ':'
+	vname = '';
+	for( vname in vnames ){
+		v = vname.match( '%d[%d%.]*$' );
+		vinfo += item.expand( { 'page'=>vname, 'version'=>v.substring } );
+	}
+	page = vinfo + '<br/>' + page;
+}else{
+	m = name.match( '_%d[%d%.]*$' );
+	if( m.start >=0 ){
+		vinfo = dict_lang['not_latest_version_info'] + ': ';
+		vinfo += item.expand( { 'page'=>name[ : m.start-1], 'version'=>dict_lang['current'] } );
+	}
+	page = vinfo + '<br/>' + page;
+}
+
+homepage = name == '' or name == ('home_' + language)
+homepage = homepage and space_owner.username == WEB_SPACE
+
+io.writeln( MakeFrame( title, page + MakePageStatus( p[5], p[3], p[4] ), homepage ) );

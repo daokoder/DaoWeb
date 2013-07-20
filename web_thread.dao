@@ -1,0 +1,162 @@
+
+load web_page
+
+
+routine GetThread( space : User, stid : int, comment = 0, edit=0 )
+{
+	hd = web_database.Select( SpaceText, Text ).Where()
+		.EQ( SpaceText, 'uid_space', space.uid ).EQ( SpaceText, 'stid', stid )
+		.Match( SpaceText, Text, 'tid' );
+	thd = (postthread)('',dict_lang[ 'not_exist' ],'','','','','','','','',0,'');
+	coms : list<postcomment> = {};
+	labs : list<label_t> = {};
+	uid2name = { => };
+	user = User{};
+	txt = Text{};
+	sptxt = SpaceText{};
+	if( hd.QueryOnce( sptxt, txt ) ){
+		thd.tid = (string) sptxt.stid;
+		thd.uid = (string) sptxt.uid_author;
+		thd.replies = (string) sptxt.count_reply;
+		thd.hits = (string) sptxt.hit_count;
+		thd.topic = txt.title;
+		if( sptxt.uid_author == User::Current.uid ) edit = 1;
+		thd.content = CompleteText( txt.stid, txt.content, space.username, edit );
+		thd.time = FormatTime( sptxt.time_create );
+		if( sptxt.time_edit ) thd.modify = FormatTime( sptxt.time_edit );
+		uid2name[ sptxt.uid_author ] = '';
+
+		TextHit::Update( txt.tid );
+		labs = GetTextLabel( txt.tid );
+
+		hd = web_database.Select( SpaceText, Text ).Where()
+			.EQ( SpaceText, 'uid_space', space.uid )
+			.EQ( SpaceText, 'stid_first', sptxt.stid )
+			.NE( SpaceText, 'stid', sptxt.stid )
+			.Match( SpaceText, Text, 'tid' ).Sort( SpaceText, 'time_create' );
+		while( hd.Query( sptxt, txt ) ){
+			com = (postcomment)('','','','','','','','','','',0);
+			edit2 = User::Current.uid == txt.uid_author;
+			uid2name[ sptxt.uid_author ] = '';
+			com.first = thd.tid;
+			com.author = (string) sptxt.uid_author;
+			com.uid = (string) sptxt.uid_author;
+			com.tid = (string) sptxt.stid;
+			com.tid2 = (string) sptxt.stid_reply;
+			com.topic = txt.title;
+			com.content = CompleteText( txt.stid, txt.content, space.username, edit2 );
+			com.time = FormatTime( sptxt.time_create );
+			if( sptxt.time_edit ) com.modify = FormatTime( sptxt.time_edit );
+			coms.append( com );
+		}
+		hd.Done();
+	}else{
+		return thd, coms, labs;
+	}
+	hd = web_database.Select( User ).Where().EQ( 'uid' );
+	for( uid in uid2name.keys() ){
+		if( hd.Bind( uid ).Query( user ) ) uid2name[ uid ] = user.username;
+	}
+	hd.Done()
+	thd.author = uid2name[ (int) thd.uid ];
+	size = coms.size();
+	if( size ){
+		if( comment ==0 ) comment = (int) coms[0].tid;
+		k = 0;
+		for( k = 0 : size-1 ){
+			if( comment == (int) coms[k].tid ) break;
+		}
+		for( i = 0 : size-1 ){
+			com = coms[i];
+			com.author = uid2name[ (int) com.author ];
+		}
+		count = 0;
+		for( i = k : k + 50 ){
+			if( i >= size ) break;
+			com = coms[i];
+			com.show = 1;
+			count += 1;
+			for( j = 0 : k ){
+				if( coms[j].tid == com.tid2 ){
+					coms[j].show = 1;
+					count += 1;
+					break;
+				}
+			}
+		}
+		if( count < 40 ){
+			for( j = k; j>=0; --j ){
+				coms[j].show = 1;
+				count += 1;
+				if( count >= 40 ) break;
+			}
+		}
+	}
+	return thd, coms, labs;
+}
+
+
+
+routine MakeThread( thd : postthread, comments : list<postcomment>, 
+		labels : list<label_t>, url_base='', current_uid=0 ) 
+{
+	template = io.read( "::templates/thread.html" );
+	parts = template.split( "<!--splitter-->\n" );
+	npart = parts.size();
+	if( npart <=2 ) return template;
+	url_map = { 'url_base' => url_base, 'space'=>space_owner.username, 'marks'=>'' }; # XXX
+	css = parts[0].expand( dict_lang );
+	prompt = parts[1].expand( dict_lang );
+	prompt = prompt.expand( { 'space'=>space_owner.username }, '@' );
+	labtemp = parts[7].expand( dict_lang );
+	topic1 = parts[2].expand( dict_lang ).expand( url_map, '@' );
+	topic2 = parts[3].expand( dict_lang ).expand( url_map, '@' );
+	labcode = '';
+	for( lab in labels ) labcode += labtemp.expand( lab, '@' );
+	thd.labels = labcode;
+	source = "";
+	edit = dict_lang[ "edit" ];
+	if( current_uid == (int)thd.uid ) thd.edit = edit;
+	if( thd.modify ){
+		source = topic2.expand( thd, "@" );
+	}else{
+		source = topic1.expand( thd, "@" );
+	}
+
+	tempcom1 = parts[4].expand( dict_lang ).expand( url_map, '@' );
+	tempcom2 = parts[5].expand( dict_lang ).expand( url_map, '@' );
+	tempcom3 = parts[6].expand( dict_lang ).expand( url_map, '@' );
+	for( i = 0 : comments.size()-1){
+		com = comments[i];
+		if( (int) com.uid == current_uid ) com.edit = edit;
+		if( com.modify.size() && com.show ==1 ){
+			source += tempcom2.expand( com, "@" );
+		}else if( com.show ){
+			source += tempcom1.expand( com, "@" );
+		}else{
+			source += tempcom3.expand( com, "@" );
+		}
+	}
+	return css + source + prompt;
+}
+
+
+io.writeln( 'content-type: text/html\n\n' );
+
+tid = (int) HTTP_GET[ 'thread' ];
+comment = HTTP_GET.has( 'comment' ) ? (int) HTTP_GET[ 'comment' ] : 0;
+
+edit = space_owner.uid == User::Current.uid;
+admin = WEB_ADMINS.has( User::Current.username )
+
+tpl =
+@[html]
+<div style="float:right;border:2px solid #F00;padding:5px;background:#FDD">
+<a href="/space/@(space)/admin/text/@(tid)">Admin</a>
+</div>
+@[html]
+
+data = GetThread( space_owner, tid, comment, edit );
+thread  = admin ? tpl.expand( { 'space'=>space_owner.username, 'tid'=>(string)tid }, '@' ) : '';
+thread += MakeThread( data[0], data[1], data[2], url_base2, User::Current.uid );
+io.writeln( MakeFrame( data[0].topic, thread ) );

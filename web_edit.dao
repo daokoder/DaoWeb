@@ -1,0 +1,139 @@
+
+load web_text
+load web_page
+load web_label
+load web_editor
+
+io.writeln( 'content-type: text/html\n\n' )
+
+
+if( User::Current.uid ==0 ){
+	io.writeln( MakeFrame( dict_lang[ 'please_login' ] ) );
+	return;
+}
+
+etype = '';
+tid = 0;
+tid_reply = 0;
+section = '';
+if( HTTP_GET.has( 'edit' ) ){
+	tid = frame(0){ (int) HTTP_GET[ 'edit' ] };
+	etype = HTTP_GET[ 'edit' ];
+}
+
+
+
+if( etype == 'user' ){
+
+	page = io.read( '::templates/user.html' );
+	page = page.expand( dict_lang );
+	
+	status = '';
+	userinfo = UserInfo{ space_owner.uid };
+	
+	if( HTTP_POST.size() ){
+		oldpwd = HTTP_POST[ 'oldpwd' ];
+		newpwd1 = HTTP_POST[ 'newpwd1' ];
+		newpwd2 = HTTP_POST[ 'newpwd2' ];
+		if( oldpwd ){
+			oldpwd = oldpwd.encrypt( WEB_PWD_KEY, $hex );
+			if( oldpwd != space_owner.password ){
+				status = 'wrong_password';
+			}else if( newpwd1.size() < 6 ){
+				status = 'password_short';
+			}else if( newpwd1 != newpwd2 ){
+				status = 'password_unmatch';
+			}else{
+				space_owner.password = newpwd1.encrypt( WEB_PWD_KEY, $hex );
+			}
+		}
+		if( status == '' ){
+			status = 'updated';
+			space_owner.fullname = HTTP_POST[ 'fullname' ];
+			space_owner.country = HTTP_POST[ 'country' ];
+			space_owner.Set();
+			userinfo.last_name = HTTP_POST[ 'lastname' ];
+			userinfo.first_name = HTTP_POST[ 'firstname' ];
+			userinfo.email = HTTP_POST[ 'email' ];
+			userinfo.Set();
+		}
+	}
+	
+	userinfo.Get();
+	
+	info = 
+	{
+		'space' => space_owner.username,
+		'status' => dict_lang[ status ],
+		'fullname' => space_owner.fullname,
+		'country' => space_owner.country,
+		'lastname' => userinfo.last_name,
+		'firstname' => userinfo.first_name,
+		'email' => userinfo.email
+	};
+	
+	io.writeln( MakeFrame( page.expand( info, '@' ) ) );
+	return
+}
+
+
+
+if( HTTP_GET.has( 'reply' ) ) tid_reply = (int) HTTP_GET[ 'reply' ];
+if( HTTP_GET.has( 'section' ) ) section = HTTP_GET[ 'section' ];
+
+name = ''
+if( etype == 'page' ){
+	uri = HTTP_ENV.has( 'REQUEST_URI' ) ? HTTP_ENV[ 'REQUEST_URI' ] : '/';
+	caps = uri.capture( '^ / space / %w+ / edit / page / (%w+)' )
+	if( caps ) name = caps[1]
+	tid = frame(0){ (int) name };
+}
+if( name.pfind( '%w' ) ) etype = 'page';
+
+source = GetSource( space_owner.uid, tid, section, label_list );
+reply = GetSource( space_owner.uid, tid_reply );
+name = source[ 'name' ] ? source[ 'name' ] : name;
+check_blog = source[ 'blog' ] ? 'checked' : '';
+check_forum = source[ 'forum' ] ? 'checked' : '';
+if( tid_reply ){
+	check_blog = reply[ 'blog' ] ? 'checked' : '';
+	check_forum = reply[ 'forum' ] ? 'checked' : '';
+}
+status = tid or tid_reply ? 'disabled' : ''
+disabling = { ''=>'' };
+disabling['disable_blog'] = status;
+disabling['disable_forum'] = status;
+disabling['disable_page'] = status;
+disabling['disable_title'] = '';
+switch( etype ){
+	case 'blog' : 
+		check_blog = 'checked'; 
+		disabling['disable_page'] = 'disabled';
+	case 'forum' :
+		check_forum = 'checked'; 
+		disabling['disable_page'] = 'disabled';
+	case 'page' :
+		disabling['disable_blog'] = 'disabled';
+		disabling['disable_forum'] = 'disabled';
+	case 'labels' :
+		io.writeln( MakeFrame( ViewLabels( label_list ) ) );
+		return
+	case 'user' :
+		return
+}
+if( tid_reply ) for( lab in label_list ) lab.checked = 'disabled';
+
+preview = '';
+if( HTTP_FILE.has( 'source' ) ){
+	preview = HTTP_FILE[ 'source' ].read(-1);
+	source['source'] = preview;
+}
+src = source['source'];
+
+editor = ViewEditor( source['title'], src, section, name, 
+check_blog, check_forum, disabling, label_list, tid, tid_reply, reply, preview, url_base );
+#{
+#}
+
+io.writeln( MakeFrame( dict_lang['edit'], editor ) );
+

@@ -1,0 +1,9 @@
+<span class=CodeStruct>routine</span> Sum<span class=SpecSymbol>(</span> nums :<span class=DataType>list</span>&lt;<span class=DataType>int</span>&gt; <span class=SpecSymbol>)</span>
+<span class=SpecSymbol>{</span>
+    sum = <span class=Number>0</span> 
+    <span class=StmtKey>for</span> <span class=SpecSymbol>(</span>x <span class=SpecSymbol>in</span> nums<span class=SpecSymbol>)</span> sum += x
+    <span class=StmtKey>return</span> sum 
+<span class=SpecSymbol>}</span>
+ints = <span class=SpecSymbol>{</span><span class=Number>1</span> : <span class=Number>2</span> : <span class=Number>1000</span><span class=SpecSymbol>}</span>
+fut = Sum<span class=SpecSymbol>(</span> ints <span class=SpecSymbol>)</span> !!
+sum = fut.<span class=Method>value</span><span class=SpecSymbol>(</span><span class=SpecSymbol>)</span>

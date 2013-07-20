@@ -1,0 +1,30 @@
+
+load web.cgi
+load web_config
+load web_mime
+
+http_header_404 =
+@[http_header]HTTP/1.1 404 Not Found
+Content-Type: text/html
+
+<html><body>
+<h1>404 Not Found</h1>
+</body></html>
+@[http_header]
+
+if( not HTTP_ENV.has( 'REQUEST_URI' ) ) return io.writeln( http_header_404 )
+
+uri = HTTP_ENV[ 'REQUEST_URI' ];
+
+mime = 'text/plain'
+pos = uri.find( '.', %uri - 1, 1 )
+if( pos >= 0 ){
+	suffix = uri[ pos : ]
+	if( web_mimes.has( suffix ) ) mime = web_mimes[ suffix ]
+}
+
+file = WEB_ROOT
+if( %file and file[-1] == '/'[0] ) file.erase( %file - 1 )
+file += uri
+
+sendfile( file, mime, http_header_404 )

@@ -1,0 +1,110 @@
+
+load web_page
+load web_label
+
+
+#{
+if( HTTP_POST.has( 'sendpwd' ) ){
+	std::load( 'admin_sendpwd.dao' );
+	return;
+}
+#}
+
+io.writeln( 'content-type: text/html\n\n' );
+
+current_user = User::Current.username
+if( current_user != space_owner.username and not WEB_ADMINS.has( current_user ) ){
+	io.writeln( MakeFrame( dict_lang[ 'not_permitted' ] ) );
+	return;
+}
+
+uri = HTTP_ENV.has( 'REQUEST_URI' ) ? HTTP_ENV[ 'REQUEST_URI' ] : '/';
+caps = uri.capture( '^/space/' + space_owner.username + '/admin (| /(%w+) (| /(%w+) ) )' )
+
+if( caps.size() == 0 or (caps[2] != '' and caps[2] != 'text') ){
+	return io.writeln( MakeFrame( dict_lang[ 'page_not_exist' ] ) );
+}
+
+if( caps[2] == 'text' ){
+	tid = frame( 0 ){ (int) caps[4] }
+	if( tid == 0 ) return io.writeln( MakeFrame( dict_lang[ 'page_not_exist' ] ) );
+
+	# display labeling
+	labs = GetTextLabel( tid, label_list );
+	text = Text{};
+	sptx = SpaceText{};
+	web_database.Select( Text, 10, SpaceText, 4 ).Where().EQ( Text, 'tid', tid )
+		.Match( Text, SpaceText, 'tid' ).QueryOnce( text, sptx );
+	
+	template = io.read( '::templates/admin_text.html' ).split( '<!--splitter-->' );
+	body = template[0].expand( dict_lang );
+	labcheck = template[1].expand( dict_lang );
+	
+	check_labels = '';
+	for( lab in label_list ) check_labels += labcheck.expand( lab, '@' );
+	
+	kv = { 'tid'=>(string)tid, 'check_labels'=>check_labels, 'check_blog'=>'', 
+	'check_forum'=>'', 'name'=>text.name, 'title'=>text.title };
+	if( sptx.blog ) kv[ 'check_blog' ] = 'checked';
+	if( sptx.forum ) kv[ 'check_forum' ] = 'checked';
+	
+	return io.writeln( MakeFrame( body.expand( kv, '@' ) ) );
+}
+
+
+
+
+
+row = '<tr>
+<td style="border: solid thin #ccc">@(id)</td>
+<td style="border: solid thin #ccc">@(id2)</td>
+<td style="border: solid thin #ccc">@(name)</td>
+<td style="border: solid thin #ccc">@(count)</td></tr>'
+rows = '';
+hd = web_database.Select( User, Online ).Where().Match( User, Online, 'uid' )
+		.Sort( Online, 'time_login', 1 );
+
+user = User();
+online = Online{};
+while( hd.Query( user, online ) ){
+	time = '( signup: ' + FormatTime2( user.time_signup );;
+	if( online.time_login ) time += ', login: ' + FormatTime2( online.time_login );
+	time += ' )';
+	rows += row.expand( (id=>user.uid, id2=>'', name=>user.username + time, count=>''), '@' );
+}
+hd.Done();
+rows += row.expand( (id=>'', id2=>'', name=>'', count=>''), '@' );
+
+row = '<tr>
+<td style="border: solid thin #ccc"><a href="/space/@(space)/admin/text/@(id)">@(id)</a></td>
+<td style="border: solid thin #ccc">@(id2)</td>
+<td style="border: solid thin #ccc">@(name)</td>
+<td style="border: solid thin #ccc">@(count)</td></tr>'
+hd = web_database.Select( SpaceText, Text, 11 ).Where().EQ( 'stid_reply', 0 )
+	.Match( SpaceText, Text, 'tid' );
+spt = SpaceText{};
+txt = Text{};
+while( hd.Query( spt, txt ) ){
+	name = '';
+	if( spt.name == '' ){
+		name = txt.title;
+	}else{
+		name = ':: ' + spt.name;
+	}
+	rows += row.expand( (space=>space_owner.username, id=>spt.tid, id2=>spt.uid_author, name=>name, count=>spt.hit_count), '@' );
+}
+hd.Done();
+
+body =
+@[html]
+<form name="reformat" method="post" enctype="multipart/form-data" target="reformat"
+action="/ajax_server/?ajax=reformat" onsubmit="return confirm( 'Are you sure?' );">
+Reformat all texts:
+<input type="submit" id="submit" value="Reformat"/>
+<iframe id="reformat" name="reformat" src="" style="display:none;"></iframe>
+</form>
+@[html]
+
+body += '<table style="border: solid thin #999">' + rows + '</table>'
+
+io.writeln( MakeFrame( dict_lang['admin_text'], body ) );

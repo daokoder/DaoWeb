@@ -1,0 +1,83 @@
+
+
+load web_user
+load DaoGraphicsMagick;
+load DaoGraphicsMagickWand;
+
+
+io.writeln( "content-type: text/html\n\n" );
+
+if( User::Current.uid ==0 ) return
+
+if( not HTTP_POST.has( 'name' ) ) return;
+if( not HTTP_FILE.has( 'image' ) ) return;
+
+name = HTTP_POST[ 'name' ];
+image = HTTP_FILE[ 'image' ];
+
+if( name.size() ==0 ) return;
+
+#{
+src = '';
+while( not image.eof() ) src += image.read( 1000 );
+fout = io.open( "upload.png", "w" );
+fout.print( src );
+fout.close();
+#}
+
+
+routine AddImage( imgstream : io::stream, name = '' )
+{
+	InitializeMagick( '' );
+	magick_wand = NewMagickWand();  
+	MagickReadImageFile( magick_wand, imgstream );
+	width = MagickGetImageWidth( magick_wand );
+	height = MagickGetImageHeight( magick_wand );
+#  Method not available in GraphicsMagick:
+	#if( width * height > 2E5 ) MagickSetImageFormat( magick_wand, 'JPG' );
+	image = Image{};
+	image.space = space_owner.uid;
+	image.name = name;
+	image.format = MagickGetImageFormat( magick_wand );
+	data = { '', '', '' };
+	sizes = { 1024.0, 512.0, 128.0 };
+	for( i = 0 : 2 ){
+		size = sizes[i];
+		var max = width > height ? width : height;
+		if( max > size ){
+			scale = size / max;
+			width *= scale;
+			height *= scale;
+			MagickScaleImage( magick_wand, width, height );
+		}
+		if( i ==0 ){
+			image.width = width;
+			image.height = height;
+		}
+		data[i] = MagickWriteImageBlob( magick_wand, 0 )[0]
+	}
+	DestroyMagick();
+	image.large = data[0];
+	image.medium = data[1];
+	image.small = data[2];
+	hd = web_database.Delete( Image ).Where().EQ( 'space', image.space ).EQ( 'name' ).Bind( name );
+	hd.QueryOnce();
+	web_database.Insert( image );
+#{
+	fout = io.open( 'debug2.txt', 'w' );
+	fout.println( image.small );
+	fout.close();
+#}
+}
+
+
+
+AddImage( image, name );
+
+javascript = '
+<script language="javascript" type="text/javascript">
+window.top.window.StopUpload( "successful" );
+</script> 
+';
+io.writeln( javascript );
+

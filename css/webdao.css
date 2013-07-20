@@ -1,0 +1,398 @@
+html, body {
+margin: 0;
+padding: 0;
+width: 100%;
+height: 100%;
+border: none;
+background-color: #F6F9FD;
+font-size: 11pt;
+font-family:Verdana, Arial, Helvetica, sans-serif;
+min-width: 480pt;
+max-width: 1280pt;
+margin-left: auto;
+margin-right: auto;
+}
+h1{
+	text-align: center;
+}
+h3{
+	text-align: left;
+}
+img {
+	background-color: transparent;
+}
+a {
+	text-decoration: none;
+}
+a:hover{
+	text-decoration: underline;
+}
+div.sidemenu, div.sidepanel, div.sideheadline {
+	margin-top: 10pt;
+	margin-bottom: 10pt;
+	font-size: 11pt;
+	text-align: center;
+	top: 0.3em;
+	left: auto;
+	width: auto;
+	right: auto;
+	margin-left: auto ;
+	border-left: thin solid #9A8B9A;
+	border-right: thin solid #9A8B9A;
+	border-bottom: thin solid #9A8B9A;
+	border-bottom-width: 5px;
+}
+div.sideheadline {
+	text-align: left;
+}
+div.sidemenu p, div.sidepanel p, div.sideheadline p {
+	margin: 0; 
+	padding: 2px 2px;
+	font-family: Arial, sans-serif;
+}
+div.sidemenu p {
+	border-top: thin solid #CDBFDC;
+}
+div.sidemenu a, div.sidemenu em { margin: 0.2em 0.2em }
+div.sidemenu p.menutitle:first-child, div.sidepanel p.menutitle:first-child,
+div.sideheadline p.menutitle:first-child
+{
+	background: url(images/header.png) #EEEEEE repeat-x top;
+	font-weight: bold;
+	border-bottom: thin solid #9A8B9A;
+	padding-top: 0.2em;
+}
+div.sideheadline p.menutitle:first-child
+{
+	text-align: center;
+}
+
+p.menutitle a:link { text-decoration: none; color: #202080 }
+p.menutitle a:visited { text-decoration: none; color: #208020 }
+p.menutitle a:hover { background: #8080D0; color: #F0F0FB }
+
+div.sidemenu a:link { text-decoration: none; color: #202080 }
+div.sidemenu a:visited { text-decoration: none; color: #208020 }
+div.sidemenu a:hover { background: #8080D0; color: #F0F0FB }
+
+div.topmenu {
+	font-size: 20pt;
+	padding-top: 0.2em;
+	padding-left: 0.2em;
+	padding-right: 0.2em;
+	padding-bottom: 0.2em;
+}
+div.topmenu a {
+	max-height: 50px;
+}
+div.topmenu a, div.topmenu em { margin: 0.2em 0.2em }
+div.topmenu a:link { text-decoration: none; color: #202080 }
+div.topmenu a:visited { text-decoration: none; color: #208020 }
+div.topmenu a:hover { background: #8080D0; color: #F0F0FB }
+
+span.vline {
+	border-left: thin solid #CDBFDC;
+	border-right: thin solid #CDBFDC;
+}
+span.hlred {
+	font-weight : bold;
+	color : #FF0000;
+}
+
+input, select, textarea {
+	border: 2px solid #ABC;
+	margin: 2px;
+}
+input[type=text] {
+	border: 2px solid #ABC;
+	min-width: 100pt;
+	width: 50%;
+}
+input[type=text].long {
+	border: 2px solid #ABC;
+	width: 100%;
+}
+input[type=password] {
+	border: 2px solid #ABC;
+	min-width: 100pt;
+	width: 50%;
+}
+textarea.bigeditor {
+	min-width: 200pt;
+	min-height: 200pt;
+	height: 250pt;
+	width: 100%
+}
+table {
+	width: 100%;
+}
+table.textwrap { 
+	width: 1px;
+	margin: 5px;
+}
+table.topsection
+{
+   margin-top: 20px;
+   width: 99%;
+   background: #E8F0FA;
+   border: 2px solid #D8E0EA;
+}
+table.toc
+{
+   width: 40%;
+   float: right;
+   border: 2px solid #ccddcc;
+   background: #f8ffee;
+   margin-top: 10px;
+   margin-left: 10px;
+   margin-bottom: 5px;
+}
+
+td.textleft { text-align: left; }
+td.textright { text-align: right; }
+
+
+a.tooltip{
+	position:relative; /*this is the key*/
+	z-index:24; 
+	text-decoration:none
+}
+
+a.tooltip:hover {
+	z-index:25; 
+	background-color:#ff0
+}
+
+a.tooltip div{display: none}
+a.tooltip2 div{display: none}
+
+a.tooltip:hover div{ /*the span will display just on :hover state*/
+/*display:inline;*/
+display:block;
+position:absolute;
+top:1em; left:0em;
+border:1px solid #0cf;
+		 background-color:#cff; color:#000;
+		 text-align: center
+		 }
+
+div.prompt {
+position:relative; /*this is the key*/
+	z-index:100; 
+top:30%; 
+left:40%; 
+}
+div.prompt div.prompt { 
+display:none;
+position:fixed;
+	padding: 10px;
+border:2px solid #8a4;
+		 background-color:#eeffcc; color:#000;
+		 text-align: center
+		 }
+div.prompt h3 {
+	background-color: #cda;
+}
+
+
+SPAN.PermiPrefix { color: #008080 }
+SPAN.DataPrefix { color: #009966 }
+SPAN.CodeStruct { color: #8800DD }
+SPAN.DataType { color: #10AA20 }
+SPAN.StmtKey { color: #BB8800 }
+SPAN.Comment { color: #0066FF }
+SPAN.String { color: #FF0066 }
+SPAN.Number { color: #FF0044 }
+SPAN.Method { color: #005577 }
+SPAN.SpecSymbol { color: #999900 }
+.text_italic { font-style: italic; }
+.text_bold { font-weight: bold; }
+.text_delete { text-decoration: centerline; }
+.text_underline { text-decoration: underline; }
+.flushright{ text-align: right; }
+.bold{ font-weight: bold; }
+.vspace{ padding: 0.3em 0.3em; }
+
+DIV.hmenu {
+	font-weight: bold;
+	text-align: center;
+	position: fixed;
+	top: -0.5em;
+	left: 1em;
+}
+DIV.hmenu P {
+	padding: 0.2em 0.2em;
+	font-family: Arial;
+	background: #EEFDEE;
+	border: thin outset #80808F;
+}
+DIV.hmenu a, DIV.hmenu em { margin: 0 2em }
+DIV.hmenu a:link { text-decoration: none; color: #202080 }
+DIV.hmenu a:visited { text-decoration: none; color: #208020 }
+DIV.hmenu a:hover { background: #8080D0; color: #F0F0FB }
+
+DIV.wiki_menu {
+	font-weight: bold;
+	font-size: large;
+	text-align: center;
+	position: fixed;
+	top: 0.2em;
+	right: 0.5em;
+}
+DIV.wiki_menu P {
+	padding: 0.5em 0.5em;
+	font-family: Arial;
+	background: #EEFDEE;
+	border: thin outset #80808F;
+}
+DIV.wiki_menu a, DIV.wiki_menu em { display: block; margin: 0 0.3em }
+DIV.wiki_menu a, DIV.wiki_menu em { border-bottom: 6px groove #D0D0FB }
+
+DIV.wiki_menu a:link { text-decoration: none; color: #202080 }
+DIV.wiki_menu a:visited { text-decoration: none; color: #208020 }
+DIV.wiki_menu a:hover { background: #8080D0; color: #F0F0FB }
+
+DIV.wiki_toc a { display: block; margin: 0 0.3em }
+DIV.wiki_toc a { border-bottom: 3px groove #D0D0FB }
+
+DIV.div_post {
+}
+DIV.div_post P {
+	font-family: Arial;
+	background: #EEFBDD;
+	border: thin outset #DEEBCD;
+	margin-top: 1px;
+	margin-bottom: 1px;
+}
+DIV.div_post a em { margin: 0 0em }
+DIV.div_post a em { border-bottom: 1px groove #D0D0FB }
+
+INPUT { border: 1px solid #6060A0; }
+
+.WlFormText { background-color: #FEFEFB; width: 99%; }
+.WlButton { background-color: #D0D0F0; }
+.WlSelect { background-color: #F0F0FB; }
+.WlSelectEx { background-color: #F0F0FB; width: 100%; }
+.spdList { background-color: #F4F4FB; }
+.spdListItem { background-color: #F8F8FB; }
+
+P.article {
+	background-color: #DDFFEE;
+}
+
+TABLE.diffSame { background-color: #CCCCFF; width: 100%; }
+TABLE.diffOld { background-color: #FFCCCC; width: 100%; }
+TABLE.diffNew { background-color: #CCFFCC; width: 100%; }
+
+TABLE.boardHeader {
+	padding: 8px 2px;
+	background-color: #D5EFDC;
+	width: 100%;
+}
+
+TABLE.frameTable { width: 85%; }
+Table.MaxTable {
+	width: 100%;
+	height: 0%;
+}
+Table.titleTable {
+	width: 100%;
+	background-color: #E8E8CC;
+}
+TD.LeftCol { width: 85%; }
+TD.RightCol {
+	width: 0%;
+	vertical-align: top;
+}
+TR.MinRow {
+	height: 0%;
+	margin-top: 50px;
+}
+TD.MinCol {
+	width: 0%;
+	height: 0%;
+	text-align: right;
+}
+TH.ForumTH {
+	padding: 5px 2px;
+	background-color: #F4EEFB;
+	border: 1px solid #CCCCCC;
+}
+
+TABLE.sectTable {
+	width: 98%;
+	margin-left : 1%;
+	margin-right : 1%;
+}
+div.hlcite {
+	background-color: #E8F4FD;
+	margin: 5px;
+	padding : 5px;
+	width: 98%;
+	margin-left	: 1%;
+	margin-right : 1%;
+	border: 3px dashed #BDC;
+}
+pre.hlcode {
+	background-color: #F0F6F6;
+	margin: 5px;
+	padding : 5px;
+	width: 98%;
+	margin-left	: 1%;
+	margin-right : 1%;
+	border: 3px dashed #ACB;
+}
+TABLE.outputTable {
+	background-color: #D8FEFE;
+	width: 90%;
+	margin-left	: 5%;
+	margin-right : 5%;
+}
+.sdmltable {
+	background-color: #F8E8FB;
+	margin-left	: 5%;
+	margin-right   : 5%;
+	border: 1px solid #CCCCCC;
+}
+.docTableRow {
+	padding: 10px 10px;
+	background-color: #F4EEFB;
+}
+.docTableCell {
+	background-color: #F8EEFB;
+	padding-right  : 10px;
+	padding-top	: 2px;
+	padding-left   : 10px;
+	padding-bottom : 2px;
+	border: 1px solid #CCCCCC;
+}
+.mdTable {
+	width: 100%;
+	height: 100%;
+}
+TR.TopPost {
+	padding: 13px 5px;
+	background-color: #F404EE;
+}
+.mdRow {
+	padding: 3px 5px;
+	background-color: #F4F4FB;
+}
+.postTable {
+	width: 100%;
+	height: 100%;
+}
+.postRow {
+	padding: 3px 5px;
+	background-color: #F4F4FB;
+	height: 100%;
+	vertical-align: top;
+}
+.postCell {
+	background-color: #F8EEFB;
+	border: 1px solid #CCCCCC;
+}
+.postCell2 {
+	background-color: #EECCDD;
+	border: 1px solid #CCCCCC;
+}

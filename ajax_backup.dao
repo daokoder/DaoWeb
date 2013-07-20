@@ -1,0 +1,28 @@
+
+load web_user
+
+io.writeln( 'content-type: text/plain\n\nSaving...' );
+
+title = HTTP_POST['title'];
+source = HTTP_POST['source'];
+
+if( User::Current.uid ==0 ) return
+
+routine SaveText( uid : int, title : string, source : string )
+{
+	time = sys::time();
+	if( title == '' ) title = FormatTime3( time );
+	text = LastEditing{ uid=>uid, time => time, title => title, source => source }
+
+	hd = web_database.Select( LastEditing ).Where().EQ( 'uid', uid ).EQ( 'title' ).Bind( title );
+	if( hd.QueryOnce() ==0 ){
+		web_database.Insert( text );
+	}else{
+		hd = web_database.Update( LastEditing ).Set( 'time', time )
+			.Set( 'title' ) .Set( 'source' ) .Where().EQ( 'uid', uid );
+		hd.Bind( title, 0 ).Bind( source, 1 ).QueryOnce();
+	}
+}
+
+SaveText( User::Current.uid, title, source );
+

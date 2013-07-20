@@ -1,0 +1,43 @@
+
+load web_user
+
+name = HTTP_POST[ 'username' ];
+pwd = HTTP_POST[ 'password' ];
+msg = User::SignUp( name, pwd, pwd );
+if( msg == '' ) msg = User::Login( name, pwd );
+
+io.writeln( "content-type: text/xml\n" );
+
+log = 
+"<user>
+  <id>@(id)</id>
+  <username>@(username)</username>
+  <status>@(status)</status>
+  <message>@(message)</message>
+  <cookie>@(cookie)</cookie>
+</user>";
+
+#{
+  <fullname>@(fullname)</fullname>
+status: 
+	0, successful;
+	1, wrong validation code;
+	2, user not exists;
+	3, wrong password;
+	4, others;
+#}
+
+status = '0';
+if( msg ) status = '4';
+
+user = 
+{
+	"status" => status,
+	"cookie" => "USER=" + User::Cookie + ";expires=" + cookie_time_2h + "; path=/",
+	"message" => msg
+};
+
+
+log = log.expand( user, "@" );
+
+io.writeln( log );

@@ -1,0 +1,68 @@
+<script src="/javascripts/edit_text.js"></script>
+
+<div class="prompt"> <div id="prompt_upload" class="prompt">
+<form name="test" method="post" enctype="multipart/form-data" 
+action="">
+<div><h3>$(import_file):</h3>
+<div style="text-align:left;">
+$(choose_file):<br/><input type="file" name="source" id="filename"/>
+<input type="hidden" id="image_name" name="name" value=""/>
+</div> </div>
+<input type="submit" value="$(import)" onclick="HidePrompt( 'prompt_upload' ); submit();"/>
+<input type="button" value="$(cancel)" onclick="HidePrompt( 'prompt_upload' );"/>
+</form>
+</div> </div>
+
+<div id="addarticle">
+<!--splitter-->
+<span class=bold>@(title)</span>
+<textarea id="quote" cols="100%" style="min-height:200pt" readonly="readonly">
+@(source)
+</textarea>
+<!--splitter-->
+<div style="background: #e8ffd8;border:thin solid #cea"><span>$(labels):</span>
+@(check_labels)
+</div>
+<!--splitter-->
+<input type=checkbox name=labels value="@(name)" id="check_@(name)" @(checked)>
+<span style="color:@(color)"><label for="check_@(name)">@(name)</label>&nbsp;</span>
+</input>
+<!--splitter-->
+<table class="expand"><tr><td>
+$(title):</td><td>
+<input id="title" type="text" class="long" value="@(title)" @(disable_title) onchange="BackupText1();"/>
+<input id="tid_edit" type="hidden" value="@(tid_edit)">
+<input id="tid_reply" type="hidden" value="@(tid_reply)">
+<input id="section" type="hidden" value="@(section)">
+</td></tr></table>
+<!--splitter-->
+<table class="expand"><tr><td width="20%">
+<input id="blog_post" type="checkbox" @(check_blog) @(disable_blog)>$(blog_post)</input>
+</td><td width="20%">
+<input id="forum_post" type="checkbox" @(check_forum) @(disable_forum)>$(forum_post)</input>
+</td><td align=right>
+$(page_name):<input id="page_name" type="text" value="@(name)" @(disable_page)/>
+</td></tr></table>
+<!--splitter-->
+<div>
+<textarea id="source" cols="100%" class="bigeditor" 
+onchange="BackupText1();" onkeyup="BackupText2();" onblur="BackupText1();">
+@(source)
+</textarea>
+</div>
+<div>
+<table class="expand"><tr>
+<td><input type="button" value="$(submit)" onclick="CreateText(0);"/>
+<input type="button" value="$(preview)" onclick="CreateText(1);"/>
+<td class="textright">
+<input type="button" value="$(import_file)" onclick="PromptImport();"/>
+<input type="button" value="$(restore)" onclick="RetoreBackup();" title="$(restore_from_backup)"/>
+<input type="button" value="$(discard)" onclick="DiscardText('@(HTTP_REFERER)');"/>
+</tr></table>
+</div>
+<div>
+$(info_simple_marking_up)
+</div>
+<div><span class="hlred">$(preview):</span></div>
+<div id="preview" style="border: thin solid #f84">@(preview)</div>
+</div>

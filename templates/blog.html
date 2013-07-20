@@ -1,0 +1,73 @@
+<style type="text/css">
+div.threadtopic {
+	background: #E0E8F0;
+	border: 2px solid #C8D0DA;
+	height: 40pt;
+	padding: 5pt;
+}
+div.threadtopic2, div.threadtopic3 {
+	background: #e8ffd8;
+	border: thin solid #d8e8c8;
+	margin-top: 10pt;
+	padding: 5pt;
+}
+div.threadtopic3 {
+	background: #f0e8d8;
+}
+div.postinfo, div.postinfo2 {
+	font-style: italic;
+	text-align: right;
+}
+div.postinfo2 {
+	margin-bottom : 10pt;
+}
+span.postinfo2 {
+	border-bottom: 1pt solid #d8e8c8;
+	width : auto;
+}
+div.divider {
+	background: #eeffd4;
+	border: 3px solid #d8e8c8;
+	font-size : 200%;
+	font-weight : bold;
+	text-align: center;
+	margin-top : 10pt;
+	margin-bottom : 10pt;
+}
+div.thread {
+	margin-bottom: 90pt;
+	text-align: justify;
+}
+</style>
+<!--splitter-->
+<div class="threadtopic">
+<table><tr><td  class=bold>
+<p>[@(tid)] <a href="@(url)">@(topic)</a>
+</td><td style="text-align: right">
+<a href="@(url_base)/?edit=@(tid)">@(edit)</a>
+</td></tr></table></div>
+<div class="postinfo"><a href="/space/@(author)">@(author)</a>
+$(created_at) @(time)</div>
+<div class="postinfo2"> <span class="postinfo2">
+@(replies) $(replies), @(hits) $(hits) </span> </div>
+<div class="thread">@(content)
+(<a href="@(url)" style="font-weight:bold">$(full_text)</a>)
+<br clear=all></div>
+<!--splitter-->
+<div class="threadtopic">
+<table><tr><td  class=bold>
+<p>[@(tid)] <a href="@(url)">@(topic)</a>
+</td><td style="text-align: right">
+<a href="@(url_base)/?edit=@(tid)">@(edit)</a>
+</td></tr></table></div>
+<div class="postinfo"><a href="/space/@(author)">@(author)</a>
+$(created_at) @(time)</div>
+<div class="postinfo"><a href="/space/@(author)">@(author)</a>
+$(modified_at) @(modify)</div>
+<div class="postinfo2"> <span class="postinfo2">
+@(replies) $(replies), @(hits) $(hits) </span> </div>
+<div class="thread">@(content)
+(<a href="@(url)" style="font-weight:bold">$(full_text)</a>)
+<br clear=all></div>
+<!--splitter-->
+<span style="color:@(color)">&#9830;@(name)</span>

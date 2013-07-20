@@ -1,0 +1,21 @@
+
+load web.cgi;
+
+action = '';
+if( HTTP_GET.has( 'ajax' )  ) action = (string) HTTP_GET[ 'ajax' ];
+if( HTTP_POST.has( 'ajax' )  ) action = (string) HTTP_POST[ 'ajax' ];
+
+#io::stderr.writeln( 'action', action, HTTP_GET, HTTP_POST )
+
+switch( action ){
+case 'label'      : std::load( 'ajax_label.dao' );
+case 'commit'     : std::load( 'ajax_commit.dao' );
+case 'preview'    : std::load( 'ajax_preview.dao' );
+case 'backup'     : std::load( 'ajax_backup.dao' );
+case 'restore'    : std::load( 'ajax_restore.dao' );
+case 'upload'     : std::load( 'ajax_upload.dao' )
+case 'password'   : std::load( 'ajax_password.dao' )
+case 'reformat'   : std::load( 'ajax_reformat.dao' )
+case 'admin_text' : std::load( 'ajax_admin_text.dao' );
+}
+

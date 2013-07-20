@@ -1,0 +1,14 @@
+
+load web_page
+
+io.writeln( 'content-type: text/html\n\n' );
+
+uri = HTTP_ENV.has( 'REQUEST_URI' ) ? HTTP_ENV[ 'REQUEST_URI' ] : '/';
+caps = uri.capture( '^ / (%w+) ($|/ (.*) )' );
+
+tmp = 
+'<iframe src ="$(iframe)" style="width:100%;min-height:800pt;border:2px solid #CDE">
+  <p>Your browser does not support iframes.</p>
+</iframe>';
+
+io.writeln( MakeFrame( 'iframe', tmp.expand( {'iframe'=>caps[3]} ) ) );

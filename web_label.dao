@@ -1,0 +1,53 @@
+
+load web_data
+
+
+routine GetLabels( space : int )
+{
+	label = Label{};
+	labels = {};
+	hd = web_database.Select( Label ).Where().EQ( 'uid', space );
+	while( hd.Query( label ) ) labels.append( label.AsTuple() );
+	return labels;
+}
+
+routine GetTextLabel( tid, all : list<label_t> = {} ) => list<label_t>
+{
+	labs : list<label_t> = {};
+	kvlab : map<int,int> = {=>};
+	txtlab = TextLabeling{};
+	label = Label{};
+	hd = web_database.Select( TextLabeling, Label ).Where()
+		.EQ( TextLabeling, 'tid', tid ).Match( TextLabeling, Label, 'lid' );
+	while( hd.Query( txtlab, label ) ){
+		labs.append( label.AsTuple() );
+		kvlab[ label.lid ] = 1;
+	}
+	hd.Done();
+	for( lab in all ) if( kvlab.has( lab.lid ) ) lab.checked = 'checked';
+	return labs;
+}
+
+
+
+routine ViewLabels( labels : list<label_t> )
+{
+	template = io.read( '::templates/edit_label.html' );
+	parts = template.split( '<!--splitter-->\n' );
+	main = parts[0].expand( dict_lang, '$' );
+	labtemp = parts[1].expand( dict_lang, '$' );
+	labcode = '';
+	options0 = {'0'=>'0', '1'=>'1', '2'=>'2', '3'=>'3', '4'=>'4', '5'=>'5'};
+	for( label in labels ){
+		labcode2 = labtemp.expand( label, '@' );
+		options = options0[:];
+		row = (string)label.row;
+		options[ row ] = row + '" selected="selected';
+		labcode2 = labcode2.expand( options, '@' );
+		options = options0[:];
+		sort = (string)label.sort;
+		options[ sort ] = sort + '" selected="selected';
+		labcode += labcode2.expand( options );
+	}
+	return main.expand( { "labels" => labcode }, '@' );
+}

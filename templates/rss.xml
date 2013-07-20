@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<!--?xml-stylesheet type="text/css" href="rss.css" ?-->
+<rss version="2.0">
+<!--splitter-->
+  <channel>
+    <title>@(title)</title>
+    <link>@(link)</link>
+    <description>@(description)</description>
+    <language>@(language)</language>
+    <pubDate>@(pubDate)</pubDate>
+    <lastBuildDate>@(lastBuildDate)</lastBuildDate>
+    <generator>Dao Scripts</generator>
+    <managingEditor>webmaster@daovm.net</managingEditor>
+    <webMaster>webmaster@daovm.net</webMaster>
+    <ttl>60</ttl>
+ 
+<!--splitter-->
+<item>
+	<title>@(title)</title>
+	<link>@(link)</link>
+	<description>
+	@(description)
+	</description>
+	<pubDate>@(pubDate)</pubDate>
+	<guid>@(guid)</guid>
+</item>

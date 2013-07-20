@@ -1,0 +1,48 @@
+
+<p><span style="color: #ff0000"><h2>@(status)</h2></span>
+
+<h2>$(user_data)</h2>
+
+<div class="prompt"> <div id="prompt_upload" class="prompt">
+<form name="upload_image" method="post" enctype="multipart/form-data" 
+action="/ajax_server/?ajax=upload" target="upload_target" onsubmit="return UploadImage();">
+<input type="hidden" name="space" value="@(space)"/>
+<div><h3>$(change_picture):</h3>
+<div style="text-align:left;">
+$(choose_file):<br/><input type="file" name="image" id="filename"/>
+<input type="hidden" id="image_name" name="name" value=""/>
+</div> </div>
+<input type="submit" value="$(upload)"/>
+<input type="button" value="$(cancel)" onclick="HidePrompt( 'prompt_upload' );"/>
+<iframe id="upload_target" name="upload_target" src="" style="display:none;"></iframe>
+</form>
+</div> </div>
+
+<h3>$(public): $(visible_to_all)</h3>
+<table align="right" class="textwrap">
+<tr><td>$(display_photo):
+<tr><td><a onclick="PromptUploadImage( 'myphoto' );" class="tooltip"><img src="/space/@(space)/image/myphoto/?size=small"/><div>$(change_picture)</div></a></td></tr>
+</table>
+<form name="user_data" method="post" enctype="multipart/form-data" action="/space/@(space)/user">
+<table>
+<tr><td><br/>
+<tr><td><br/>
+<tr><td>$(full_name):<td><input type="text" name="fullname" value="@(fullname)"/>
+<tr><td>$(country):<td><input type="text" name="country" value="@(country)"/>
+<tr><td><br/>
+<tr><td><br/>
+</table>
+<br clear=all/>
+
+<h3>$(private): $(visible_to_yourself)</h3>
+<table>
+<tr><td class>$(last_name):<td><input type="text" name="lastname" value="@(lastname)"/>
+<tr><td>$(first_name):<td><input type="text" name="firstname" value="@(firstname)"/>
+<tr><td>$(email):<td><input type="text" name="email" value="@(email)"/>
+<tr><td><br/>
+<tr><td>$(oldpwd):<td><input type="password" name="oldpwd" value=""/>
+<tr><td>$(newpwd):<td><input type="password" name="newpwd1" value=""/>
+<tr><td>$(newpwd):<td><input type="password" name="newpwd2" value=""/>
+<tr><td><td><input type="submit" id="submit" value="$(update)"/>
+</table>
+</form>

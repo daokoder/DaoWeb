@@ -1,0 +1,140 @@
+<style type="text/css">
+div.threadtopic {
+	background: #E0E8F0;
+	border: 2px solid #C8D0DA;
+	height: 40pt;
+	padding: 5pt;
+}
+div.threadtopic2, div.threadtopic3 {
+	background: #E8F0E0;
+	border: 2px solid #D0DED9;
+	margin-top: 10pt;
+	padding: 5pt;
+}
+div.threadtopic3 {
+	background: #F0E8D8;
+}
+div.postinfo, div.postinfo2 {
+	background: #E8F0E8;
+	font-style: italic;
+	text-align: right;
+}
+div.postinfo2 {
+	margin-bottom : 15pt;
+}
+span.postinfo2 {
+	border-bottom: 1pt solid #d8e8c8;
+	width : auto;
+}
+div.divider {
+	background: #eeffd4;
+	border: 3px solid #d8e8c8;
+	font-size : 200%;
+	font-weight : bold;
+	text-align: center;
+	margin-top : 50pt;
+	margin-bottom : 10pt;
+}
+div.thread {
+	background-color: #F3F6F9;
+	border: 2px solid #E4E8E0;
+	padding: 8pt;
+	padding-bottom: 50pt;
+	margin-bottom: 15pt;
+	text-align: justify;
+}
+</style>
+<!--splitter-->
+<div class="prompt"> <div id="prompt_upload" class="prompt">
+<form name="upload_image" method="post" enctype="multipart/form-data" 
+action="/ajax_server/?ajax=upload" target="upload_target" onsubmit="UploadImage();">
+<input type="hidden" name="space" value="@(space)"/>
+<div><h3>$(change_image):</h3>
+<div style="text-align:left;">
+$(choose_file):<br/><input type="file" name="image" id="filename"/>
+<input type="hidden" id="image_name" name="name" value=""/>
+</div> </div>
+<input type="submit" value="$(upload)"/>
+<input type="button" value="$(cancel)" onclick="HidePrompt( 'prompt_upload' );"/>
+<iframe id="upload_target" name="upload_target" src="" style="display:none;"></iframe>
+</form>
+</div> </div>
+<!--splitter-->
+<div style="font-weight: bold">$(label): @(labels)</div>
+<div class="threadtopic">
+<table><tr><td>
+<p>[@(tid)@(marks)] <span  class=bold>@(topic)</span></td>
+<td style="text-align: right"><a href="@(url_base)/edit/@(tid)">@(edit)</a>
+<a href="@(url_base)/reply/@(tid)">$(comment)</a></td>
+</tr></table></div>
+<div class="postinfo"><span class="postinfo2">
+<a href="/space/@(author)">@(author)</a>
+$(created_at) @(time)</span></div>
+<div class="postinfo2"> <span class="postinfo2">
+@(replies) $(replies), @(hits) $(hits)
+</span> </div>
+<div class="thread">@(content)</div>
+<div class="divider">$(comments)</div>
+<!--splitter-->
+<div style="font-weight: bold">$(label): @(labels)</div>
+<div class="threadtopic">
+<table><tr><td>
+<p>[@(tid)@(marks)] <span  class=bold>@(topic)</span></td>
+<td style="text-align: right">
+<a href="@(url_base)/edit/@(tid)">@(edit)</a>
+<a href="@(url_base)/reply/@(tid)">$(comment)</a></td>
+</tr></table></div>
+<div class="postinfo"><a href="/space/@(author)">@(author)</a>
+$(created_at) @(time)</div>
+<div class="postinfo"><span class="postinfo2">
+<a href="/space/@(author)">@(author)</a>
+$(modified_at) @(modify)</span></div>
+<div class="postinfo2"> <span class="postinfo2">
+@(replies) $(replies), @(hits) $(hits)
+</span> </div>
+<div class="thread">@(content)</div>
+<div style="border-top: thin solid #dec">$(source) URL:
+<a href="/space/@(space)/thread/@(tid)">
+http://www.daovm.net/space/@(space)/thread/@(tid)</a></div>
+<div class="divider">$(comments)</div>
+<!--splitter-->
+<div class="threadtopic2">
+<table><tr><td  class=bold>
+<a name="comment@(tid)">[@(tid)<font color="#00C000">&#8658;</font>@(tid2)]</a>
+<a href="@(url_base)/thread/@(first)/comment/@(tid)#comment@(tid)">@(topic)</a></td>
+<td style="text-align: right"><a href="@(url_base)/edit/@(tid)">@(edit)</a>
+<a href="@(url_base)/reply/@(tid)">$(comment)</a></td>
+</tr></table></div>
+<div class="postinfo2"> <span class="postinfo2">
+<a href="/space/@(author)">@(author)</a> $(commented_at) @(time)
+</span> </div>
+<div style="text-align:justify;width=95%;margin-left:5%;margin-bottom:50pt;">@(content)</div>
+<!--splitter-->
+<div class="threadtopic2">
+<table><tr><td  class=bold>
+<a name="comment@(tid)">[@(tid)<font color="#00C000">&#8658;</font>@(tid2)]</a>
+<a href="@(url_base)/thread/@(first)/comment/@(tid)#comment@(tid)">@(topic)</a></td>
+<td style="text-align: right"><a href="@(url_base)/edit/@(tid)">@(edit)</a>
+<a href="@(url_base)/reply/@(tid)">$(comment)</a></td>
+</tr></table></div>
+<div class="postinfo"> 
+<a href="/space/@(author)">@(author)</a> $(commented_at) @(time)
+</div>
+<div class="postinfo2"> <span class="postinfo2">
+<a href="/space/@(author)">@(author)</a> $(modified_at) @(modify)
+</span> </div>
+<div style="text-align:justify;width=95%;margin-left:5%;margin-bottom:50pt;">@(content)</div>
+<!--splitter-->
+<div class="threadtopic3">
+<table><tr><td  class=bold>
+<a name="comment@(tid)">[@(tid)<font color="#00C000">&#8658;</font>@(tid2)]</a>
+<a href="@(url_base)/thread/@(first)/comment/@(tid)#comment@(tid)" class="tooltip">
+<span style="font-size: 16pt; font-weight: bold;">&#8659;</span> @(topic)<div>$(click_to_expand)</div></a>
+<td style="text-align: right">
+(<a href="/space/@(author)">@(author)</a>, @(time))
+<a href="@(url_base)/reply/@(tid)">$(comment)</a>
+</tr></table></div>
+<div style="width:100%;height:32pt;overflow:auto;border:2px solid #bca" title="$(folded)">
+@(content)</div>
+<!--splitter-->
+<span style="color:@(color)">&#9830;@(name)</span>

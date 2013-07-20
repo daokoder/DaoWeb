@@ -1,0 +1,406 @@
+
+load web_config;
+load web_common;
+load DaoSQL;
+#load DaoSQLite;
+load DaoMySQL;
+
+global enum UserStatusType
+{
+	USER_NOT_LOGIN,
+	USER_WAS_LOGIN,
+	USER_IS_LOGIN
+};
+
+# global permission:
+global enum UserType
+{ 
+	USER_ADMIN ,   # global administrator.
+	USER_NORMAL ,  # normal users.
+	USER_LIMITED , # users that can only post at his own space.
+	USER_EXILED    # users that can post at nowhere.
+};
+
+global enum UserRoleType
+{
+	ROLE_NONE ,
+	ROLE_FRIEND ,
+	ROLE_ADMIN 
+};
+
+use enum UserStatusType
+use enum UserRoleType
+use enum UserType
+
+class Space
+{
+	var  sid : INT_PRIMARY_KEY_AUTO_INCREMENT;
+};
+
+class User
+{
+	var  uid         : INT_PRIMARY_KEY_AUTO_INCREMENT;
+	var  status      : INT = USER_NORMAL;
+	var  text_count  : INT = 0;
+	var  space_text  : INT = 0;
+	var  time_signup : INT = 0;
+	var  username    : CHAR50;
+	var  password    : CHAR50;
+	var  fullname    : CHAR50;
+	var  country     : CHAR50;
+
+	static  Super    : User;
+	static  Current  : User;
+
+	static  Cookie = ""; # for current user
+	static  Status = USER_NOT_LOGIN; # for current user
+
+	static routine Identify( cookie ='' );
+	static routine SignUp( name : string, pwd : string, pwd2 : string );
+	static routine Login( name : string, pwd : string );
+	static routine Logout();
+
+	routine Set();
+}
+
+class UserInfo
+{
+	var  uid        : INT_PRIMARY_KEY;
+	var  first_name : CHAR50;
+	var  last_name  : CHAR50;
+	var  birth      : CHAR20;
+	var  email      : CHAR50;
+	var  pubinfo    : TEXT;
+
+	routine Get()=>int;
+	routine Set();
+}
+
+
+class UserRole
+{
+	var  uid      : INT;
+	var  uid_host : INT;
+	var  role     : INT = 0;
+}
+
+class Online
+{
+	var  uid         : INT_PRIMARY_KEY;
+	var  time_login  : INT;
+	var  time_active : INT;
+	var  cookie      : CHAR50;
+}
+
+class Label
+{
+	var  lid        : INT_PRIMARY_KEY_AUTO_INCREMENT;
+	var  uid        : INT = 0;
+	var  row        : INT = 0;
+	var  sort       : INT = 0;
+	var  blog_count : INT = 0;
+	var  post_count : INT = 0;
+	var  name       : CHAR50;
+	var  color      : CHAR10;
+	var  language   : CHAR20;
+
+	routine AsTuple() => label_t { 
+		#return label_t{ lid, row, sort, name, color, blog_count, post_count, '' }; 
+		return ( lid, row, sort, name, color, blog_count, post_count, '' ); 
+	}
+};
+
+class TextStat
+{
+	const  __MYSQL_TABLE_PROPERTY__ = 'INDEX ( time_range, suid )';
+
+	var  suid       : INT;
+	var  blog_count : INT;
+	var  post_count : INT;
+	var  time_range : INT;
+	# 0, all time; 20080000, one year; 20080800, one month; 20080803, one day;
+
+	static routine Update( space : int, time : int, blog=0, post=0 );
+};
+
+
+class TextLabeling
+{
+	var  tid : INT = 0;
+	var  lid : INT = 0;
+};
+
+class SpaceText
+{
+	var  stid          : INT_PRIMARY_KEY_AUTO_INCREMENT; # local text id
+	var  blog          : TINYINT = 0;
+	var  forum         : TINYINT = 0;
+	var  tid           : INT = 0;
+	var  uid_space     : INT = 0; # the space owner where the text is posted
+	var  uid_author    : INT = 0; # the author of the text
+	var  uid_commenter : INT = 0; # the latest commenter of the text
+	var  stid_first    : INT = 0; # the stid of the first text in the thread
+	var  stid_last     : INT = 0; # the last stid in the thread
+	var  stid_reply    : INT = 0; # the stid to which this text replies to
+	var  count_reply   : INT = 0;
+	var  hit_count     : INT = 0;
+	var  date_create   : INT = 0; # for conveniece;
+	var  time_create   : INT = 0;
+	var  time_edit     : INT = 0;
+	var  time_comment  : INT = 0;
+	var  time_order    : INT = 0;
+	var  name          : CHAR50 = ''; # for named page
+};
+
+#{
+tid: TEXT id;
+rid: revision id;
+log: revision log;
+source: wiki markup source;
+content: processed source with html markup;
+#}
+class Text
+{
+	const  title_index = 10;
+	const  brief_index = 11;
+
+	var  tid         : INT_PRIMARY_KEY_AUTO_INCREMENT; # global text id
+	var  stid        : INT = 0;
+	var  uid_space   : INT = 0; # the space owner where the text is posted
+	var  uid_author  : INT = 0; # the author of the text
+	var  time_create : INT = 0;
+	var  time_edit   : INT = 0;
+	var  preface     : SMALLINT = 0;
+	var  language    : CHAR20;
+	var  name        : CHAR50; # for named page
+	var  title       : VARCHAR100;
+	var  brief       : VARCHAR200;
+	var  content     : LONGTEXT;
+	var  source      : LONGTEXT;
+
+	static routine Commit( title : string, source : string, section='', log='', name='', 
+			labels='', stid=0, blog=0, forum=0, space=0, author=0, reply=0 );
+	static routine CheckOut( tid : int, section="" );
+	static routine Revert( tid : int, ridOld : int );
+	static routine GetHistory( tid : int );
+	static routine UpdateHit( tid : int, cookie : string );
+}
+
+class TextHistory
+{
+	var  rid      : INT;
+	var  time     : INT;
+	var  username : TEXT;
+	var  edit_log : TEXT;
+
+	routine _PRINT( s : io::stream ){
+		s.writeln( rid, time, username, edit_log );
+	}
+};
+
+class TextVersion
+{
+	var  tid   : INT;
+	var  vtid  : INT;
+	var  vname : CHAR50;
+}
+
+class LastEditing
+{
+	var  uid    : INT;
+	var  time   : INT;
+	var  title  : TEXT;
+	var  source : LONGTEXT;
+};
+
+#{
+rid: revision id;
+rid_base: previous revision;
+#}
+class Revision
+{
+	var  rid       : INT_PRIMARY_KEY_AUTO_INCREMENT;
+	var  rid_prev  : INT = 0;
+	var  tid       : INT;
+	var  uid       : INT;
+	var  time_edit : INT;
+	var  title     : CHAR200;
+	var  log       : TEXT;
+	var  diff      : TEXT;
+}
+
+class TextHit
+{
+	const  __MYSQL_TABLE_PROPERTY__ = 'INDEX ( tid )';
+
+	var  tid   : INT;
+	var  time  : INT;
+	var  count : INT;
+	var  agent : VARCHAR50;
+	var  ip    : VARCHAR50;
+
+	static routine Update( tid = 0 );
+}
+
+class Hit
+{
+	var  tid      : INT;
+	var  time_hit : INT;
+	var  cookie   : CHAR50;
+}
+
+class Visit
+{
+	var  suid : INT;
+	var  stid : INT;
+	var  time : INT;
+	var  ip   : BIGINT;
+};
+
+class VisitStat
+{
+	const  __MYSQL_TABLE_PROPERTY__ = 'INDEX ( time_range, suid, stid )';
+
+	var  suid       : INT;
+	var  stid       : INT;
+	var  cid        : INT;
+	var  count      : BIGINT;
+	var  time_range : INT;
+
+	routine Update( suid : int, stid : int, cid : int, time : int );
+};
+#stdio.println( VisitStat::Update( 1, 2, 3, stdlib.time() ) );
+
+class City
+{
+	var  cid : INT_PRIMARY_KEY_AUTO_INCREMENT;
+	var  ccname : CHAR100;
+};
+
+class IPv4City
+{
+	const  __MYSQL_TABLE_PROPERTY__ = 'INDEX ( ipstart, ipend )';
+
+	var  ipstart : BIGINT;
+	var  ipend   : BIGINT;
+	var  cid     : INT;
+};
+
+
+
+class Image
+{
+	var  imid   : INT_PRIMARY_KEY_AUTO_INCREMENT = 0;
+	var  space  : INT = 0;
+	var  width  : SMALLINT = 0;
+	var  height : SMALLINT = 0;
+	var  format : CHAR10 = '';
+	var  name   : CHAR100 = '';
+	var  small  : MEDIUMBLOB = ''; # 150X150
+	var  medium : MEDIUMBLOB = ''; # 400X400
+	var  large  : LONGBLOB = ''; # 1000X1000
+};
+
+
+global web_database
+
+frame {
+	defer { if( recover() ) sys::exit(0) }
+	web_database = 
+		SQLDatabase<MySQL>( WEB_DB_NAME, WEB_DB_HOST, WEB_DB_USER, WEB_DB_PWD )
+		#SQLDatabase<SQLite>( WEB_SQLITE_DB )
+}
+
+
+
+
+static routine TextStat::Update( space : int, time : int, blog=0, post=0 )
+{
+	if( blog ==0 && post ==0 ) return;
+	ctime = sys::ctime( time );
+	tm = { 0 : 0 : 4 };
+	tm[1] = ctime.year * 10000;
+	tm[2] = tm[1] + ctime.month * 100;
+	tm[3] = tm[2] + ctime.day;
+	stat = TextStat{ suid => space };
+	hd1 = web_database.Select( TextStat ).Where().EQ( 'time_range' ).EQ( 'suid', space );
+	hd2 = web_database.Update( TextStat ).Add( 'blog_count', blog )
+		.Add( 'post_count', post ).Where().EQ( 'time_range' ).EQ( 'suid', space );
+	for( t in tm ){
+		hd1.Bind( t );
+		stat.time_range = t;
+		if( hd1.QueryOnce( stat ) ==0 ){
+			stat.blog_count = 0;
+			stat.post_count = 0;
+			web_database.Insert( stat );
+		}
+		hd2.Bind( t );
+		hd2.QueryOnce();
+	}
+}
+
+
+static routine TextHit::Update( tid = 0 )
+{
+	var ip = HTTP_ENV[ 'REMOTE_ADDR' ];
+	var agent = frame(''){ HTTP_ENV[ 'HTTP_USER_AGENT' ] };
+	if( agent.pfind( '<I>( bot | spider)' ) ){
+		agent = agent.match( '%w+ %s* <I>( bot | spider)' ).substring;
+	}else if( agent.pfind( '<I> yahoo' ) ){
+		agent = agent.match( '<I>( yahoo %s* %! %s* slurp' ).substring;
+	}else{
+		agent = agent.match( '%w+ %s* / %s* %d+ (|%.%d+)' ).substring;
+	}
+	hd = web_database.Select( TextHit ).Where().EQ( 'tid', tid ).EQ( 'ip', ip );
+	hit = TextHit{ tid=>tid, time=>time_now, count=>1, agent=>agent, ip=>ip };
+	add = 1;
+	if( hd.QueryOnce( hit ) ){
+		if( time_now < hit.time + 3600 ) add = 0;
+		hd = web_database.Update( TextHit ).Add( 'count', add ).Set( 'time', time_now );
+		if( hit.agent == '' ){
+			hd.Set( 'agent' ).Where().EQ( 'tid', tid ).EQ( 'ip' )
+			.Bind( agent ).Bind( ip, 1 ).QueryOnce()
+		}else{
+			hd.Where().EQ( 'tid', tid ).EQ( 'ip' ).Bind( ip, 0 ).QueryOnce()
+		}
+	}else{
+		web_database.Insert( hit );
+	}
+	if( add ){
+		web_database.Update( SpaceText ).Add( 'hit_count', 1 ).Where()
+			.EQ( 'tid', tid ).QueryOnce();
+	}
+}
+
+
+routine VisitStat::Update( suid : int, stid : int, cid : int, time : int )
+{
+	ctime = sys::ctime( time );
+	tids = { 0, stid };
+	tm = { 0 : 0 : 4 };
+	tm[1] = ctime.year * 10000;
+	tm[2] = tm[1] + ctime.month * 100;
+	tm[3] = tm[2] + ctime.day;
+	stat = VisitStat{ suid => suid, cid => cid };
+	hd1 = web_database.Select( VisitStat ).Where().EQ( 'time_range' ).EQ( 'suid', suid ).EQ( 'stid' ).EQ( 'cid', cid );
+	hd2 = web_database.Update( VisitStat ).Add( 'count', 1 ).Where().EQ( 'time_range' ).EQ( 'suid', suid ).EQ( 'stid' ).EQ( 'cid', cid );
+	for( tid in tids ){
+		hd1.Bind( tid, 1 );
+		hd2.Bind( tid, 1 );
+		for( t in tm ){
+			hd1.Bind( t, 0 );
+			stat.stid = tid;
+			stat.time_range = t;
+			if( hd1.QueryOnce( stat ) ==0 ){
+				stat.count = 0;
+				web_database.Insert( stat );
+			}
+			hd2.Bind( t );
+			hd2.QueryOnce();
+		}
+	}
+	hd1.Bind( 0, 0 );
+	hd1.Bind( 0, 1 );
+	hd1.QueryOnce( stat );
+	return stat.count;
+}

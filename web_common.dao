@@ -1,0 +1,168 @@
+
+load sys
+load math
+load web_lang;
+load web_config;
+
+type dict = map<string,string>
+type listst = list<tuple<string,string,string> >
+
+type postinfo = tuple<tid:string,url:string,topic:string,labels:string,
+author:string,author2:string,uid_a:string,time_a:string,gmt_a:string,
+commenter:string, commenter2:string,uid_c:string,time_c:string,
+gmt_c:string,replies:string,hits:string,marks:string>
+
+type label_t = tuple<lid:int,row:int,sort:int,name:string,color:string,bcount:int,pcount:int,checked:string>
+
+type news_t = tuple<tid:string,topic:string,time:string>
+
+type postthread = tuple<tid:string,topic:string,labels:string,author:string,uid:string,
+time:string,modify:string,replies:string,hits:string,content:string,preface:int,edit:string>
+
+type postcomment = tuple<first:string,tid:string,topic:string,author:string,uid:string,
+time:string,modify:string,tid2:string,content:string,edit:string,show:int>
+
+type recent_text = tuple<stid_first:int,stid:int,time:int,user:string,title:string,brief:string>
+
+
+
+const date_keys = { 
+	"week"  -> {"Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"},
+	"month" -> {"Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"}
+}
+
+format = "%W,%D-%M-%Y %H:%I:%S GMT";
+time = sys::time();
+
+global cookie_time_0h  = sys::ctimef( time-100, format, date_keys );
+global cookie_time_1h  = sys::ctimef( time+3600, format, date_keys );
+global cookie_time_2h  = sys::ctimef( time+3600*2, format, date_keys );
+global cookie_time_3h  = sys::ctimef( time+3600*3, format, date_keys );
+global cookie_time_6h  = sys::ctimef( time+3600*6, format, date_keys );
+global cookie_time_24h = sys::ctimef( time+3600*24, format, date_keys );
+
+
+const fold_templates = "templates/";
+
+global time_now = sys::time();
+global ctime_now = sys::ctime( time_now );
+global ctimef_now = sys::ctimef( time_now );
+const hour_in_seconds = 60 * 60;
+const day_in_seconds = 24 * hour_in_seconds;
+const week_in_seconds = 7 * day_in_seconds;
+const month_in_seconds = 30 * day_in_seconds;
+const year_in_seconds = 365 * day_in_seconds;
+
+global cookie = "TEST";
+global timezone = 0;
+
+global userStatus;
+global visitCount;
+
+srand( sys::time() );
+
+if( HTTP_COOKIE.has( 'TimeZone' ) ) timezone = (int) HTTP_COOKIE[ 'TimeZone' ];
+
+global timezone_seconds = timezone * hour_in_seconds;
+
+routine FormatTime( time =0 )
+{
+	#const time_format = "%W, %Y-%M-%D, %H:%I:%S GMT";
+	const time_format = "%W, %Y-%M-%D, %H:%I:%S";
+	if( time ==0 ) time = sys::time();
+	time += timezone_seconds;
+	return sys::ctimef( time, time_format, { "week" => week_days } );
+}
+routine GMTime( time =0 )
+{
+	format = '%W,%D-%M-%Y %H:%I:%S GMT';
+	return sys::ctimef( time, format, date_keys );
+}
+routine FormatTime2( time =0 )
+{
+	const time_format = "%Y-%M-%D, %H:%I";
+	if( time ==0 ) time = sys::time();
+	time += timezone_seconds;
+	return sys::ctimef( time, time_format, { "week" => week_days } );
+}
+routine FormatTime3( time =0 )
+{
+	const time_format = "%D-%H";
+	if( time ==0 ) time = sys::time();
+	time += timezone_seconds;
+	return sys::ctimef( time, time_format, { "week" => week_days } );
+}
+
+global passed_time_format = '$(c1)$(u1)$(c2)$(u2)';
+global passed_time_format2 = '$(c1)$(u1)';
+#if( language == 'zh' ) passed_time_format = '$(c1)$(u1)$(c2)$(u2)';
+
+global time_keys =
+{
+	( year_in_seconds, 'year', 'years' ) ,
+	( month_in_seconds, 'month', 'months' ) ,
+	( week_in_seconds, 'week', 'weeks' ) ,
+	( day_in_seconds, 'day', 'days' ) ,
+	( hour_in_seconds, 'hour', 'hours' ) ,
+	( 60, 'min', 'min' ) ,
+	( 1, 'sec', 'sec' ) ,
+	( 1, 'sec', 'sec' ) ,
+	( 1, 'sec', 'sec' )
+};
+
+routine PassedTime2( time = 0 )
+{
+	var i = 0
+	if( time == 0 ) time = time_now;
+	diff = time_now - time;
+	for( i = 0 : 5 ) if (diff >= time_keys[i][0]) break;
+	tk1 = time_keys[i];
+	tk2 = time_keys[i+1];
+	tk3 = time_keys[i+2];
+	t1 = (int) diff / tk1[0];
+	t2 = (int) (diff - t1 * tk1[0]) / tk2[0];
+	k1 = t1 > 1 ? tk1[2] : tk1[1];
+	k2 = t2 > 1 ? tk2[2] : tk2[1];
+	if( t2 ==0 ){
+		t2 = (int) (diff - t1 * tk1[0]) / tk3[0];
+		k2 = t2 > 1 ? tk3[2] : tk3[1];
+	}
+	k1 = '<span style="color:#777; margin: 2px">' + dict_lang[k1] + '</span>';
+	k2 = '<span style="color:#777; margin-left: 2px">' + dict_lang[k2] + '</span>';
+	s1 = (string)t1;
+	s2 = (string)t2;
+	if( t2 == 0 ){
+		k2 = '';
+		s2 = '';
+	}
+	tup = ( c1=>s1, u1=>k1, c2=>s2, u2=>k2 );
+	return passed_time_format.expand( tup );
+}
+
+
+routine PassedTime( time =0 )
+{
+	var i = 0
+	if( time == 0 ) time = time_now;
+	diff = time_now - time;
+	for( i = 0 : 4 ) if (diff >= 2*time_keys[i][0]) break;
+	if (i ==5 and diff < time_keys[5][0]) i += 1;
+	tk1 = time_keys[i];
+	t1 = (int) diff / tk1[0];
+	k1 = t1 > 1 ? tk1[2] : tk1[1];
+	if( i >=6 ) k1 = 'moments';
+	k1 = '<span style="color:#777; margin: 2px">' + dict_lang[k1] + '</span>';
+	k1 += '<span style="color:#777; margin-left: 2px">' + dict_lang['ago'] + '</span>';
+	s1 = (string)t1;
+	if( i >=6 ) s1 = '';
+	tup = ( c1=>s1, u1=>k1 );
+	return passed_time_format2.expand( tup );
+}
+
+routine Debug( ... as messages )
+{
+	if( WEB_DEBUG == 0 ) return
+	io::stderr.writeln( messages )
+	#for( message in messages ) io::stderr.write( message, ' ' )
+	#io::stderr.writeln()
+}

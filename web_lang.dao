@@ -1,0 +1,26 @@
+
+load web.cgi
+
+global language = 'en';
+global language2 = 'english';
+global web_languages = { 'chinese'=>1, 'english'=>1 }
+
+lang = '';
+if( HTTP_GET.has( 'lang' ) ){
+	lang = HTTP_GET[ 'lang' ];
+}else if( HTTP_COOKIE.has( 'LANG' ) ){
+	lang = HTTP_COOKIE[ 'LANG' ];
+}else if( HTTP_ENV.has( 'HTTP_ACCEPT_LANGUAGE' ) ){
+	env = HTTP_ENV[ 'HTTP_ACCEPT_LANGUAGE' ];
+	env.tolower();
+	if( env.find( 'zh' ) >=0 ) lang = 'zh_cn';
+}
+
+switch( lang ){
+	case 'zh_cn' : language = 'zh'; std::load( "languages/lang_zh_cn.dao" );
+	case 'en_uk' : language = 'en'; std::load( "languages/lang_en_uk.dao" );
+	default : language = 'en'; std::load( "languages/lang_en_uk.dao" );
+}
+
+if( language == 'zh' ) language2 = 'chinese';
+

@@ -1,0 +1,209 @@
+
+
+load web_page;
+
+routine GetForumPosts( space : int, page : int, size : int, labs : string )
+{
+	if( labs == '' ) labs = language2
+	hd = web_database.Select( Label ).Where().EQ( 'uid', space ).EQ( 'name' );
+	tokens = labs.split( "," );
+	labels = {=>};
+	label = Label{};
+	for( tok in tokens ){
+		hd.Bind( tok );
+		if( hd.Query( label ) ) labels[ label.lid ] = label.AsTuple();
+	}
+	hd.Done();
+	posts = {};
+	labeling = TextLabeling{};
+	stxt = SpaceText{};
+	atext = Text{};
+	if( labels.size() ){
+		unique = {=>};
+		hd = web_database.Select( TextLabeling, SpaceText, Text ).Where()
+			.In( TextLabeling, 'lid', labels.keys() )
+			.Match( TextLabeling, SpaceText, 'tid' ).EQ( SpaceText, 'forum', 1 )
+			.Match( TextLabeling, Text, 'tid' )
+			.Match( SpaceText, SpaceText, 'stid', 'stid_first' )
+			.Sort( SpaceText, 'time_order', 1 ).Range( size, page * size );
+		while( hd.Query( labeling, stxt, atext ) ){
+			if( unique.has( stxt.tid ) ) skip;
+			unique[ stxt.tid ] = 1;
+			post = ( stxt.tid, atext.title, stxt.uid_author, stxt.time_create, 
+					stxt.uid_commenter, stxt.time_comment, stxt.count_reply, stxt.hit_count );
+			posts.append( post );
+		}
+	}else{
+		hd = web_database.Select( SpaceText, Text ).Where()
+			.EQ( SpaceText, 'uid_space', space ).EQ( SpaceText, 'forum', 1 )
+			.Match( SpaceText, Text, 'tid' )
+			.Match( SpaceText, SpaceText, 'stid', 'stid_first' )
+			.Sort( SpaceText, 'time_order', 1 ).Range( size, page * size );
+		while( hd.Query( stxt, atext ) ){
+			post = ( stxt.tid, atext.title, stxt.uid_author, stxt.time_create, 
+					stxt.uid_commenter, stxt.time_comment, stxt.count_reply, stxt.hit_count );
+			posts.append( post );
+		}
+	}
+	hd.Done();
+	var posts2 : list<postinfo> = {};
+	var postlabs : list<list<label_t> > = {};
+	author = User{};
+	commenter = User{};
+	hd2 = web_database.Select( User ).Where().EQ( 'uid' );
+	hd3 = web_database.Select( TextLabeling, Label ).Where().EQ( 'tid' )
+		.Match( TextLabeling, Label, 'lid' );
+	for( p in posts ){
+		commenter.username = '';
+		hd2.Bind( p[2] ).QueryOnce( author );
+		hd2.Bind( p[4] ).QueryOnce( commenter );
+		var max = 15;
+		author2 = author.username;
+		commenter2 = commenter.username;
+		if( author2.size() > max ) author2 = author2[:max-4] + '...';
+		if( commenter2.size() > max ) commenter2 = commenter2[:max-4] + '...';
+		post2 = postinfo{ (string) p[0], '', (string) p[1], '', 
+			author.username, author2, 
+			(string)p[2], PassedTime( p[3] ), FormatTime( p[3] ), 
+			commenter.username, commenter2,
+			(string)p[4], PassedTime( p[5] ), FormatTime( p[5] ), (string)p[6], (string)p[7], '' };
+		posts2.append( post2 );
+		hd3.Bind( p[0] );
+		plabs = {};
+		while( hd3.Query( labeling, label ) ) plabs.append( label.AsTuple() );
+		hd3.Done();
+		postlabs.append( plabs );
+	}
+	return posts2, postlabs;
+}
+#GetForumPosts( 2, 0, 10, 'news' );
+
+
+
+routine MakeForum( posts : list<postinfo>, labels : list<list<label_t> >, 
+		allabs : list<label_t> = {}, space='', page=0, size=25, labstr='', total=0 )
+{
+	url_base = "/space/" + space;
+	template = io.read( "::templates/forum.html" );
+	parts = template.split( "<!--splitter-->\n" );
+	npart = parts.size();
+	if( npart <=2 ) return template;
+
+	last = (int)(( total-1 ) / size);
+	page1 = page+1 > last ? last : page+1;
+	page10 = page+10 > last ? last : page+10;
+	range = (string)(page*size) + " - " + (string)(page*size+size);
+
+	url_forum = "/space/" + space + "/forum/";
+	var_label = '';
+	if( labstr.size() ) var_label = "labels=" + labstr;
+	var_page_up = page >1 ? "pno=" + (string)(page-1) : "" ;
+	var_page_down = page1 ? "pno=" + (string) page1 : "";
+	var_page10_up = page >10 ? "pno=" + (string)(page-10) : "" ;
+	var_page10_down = page10 ? "pno=" + (string) page10 : "";
+	var_last_page = last ? "pno=" + (string) last : "";
+	var_page_size = '';
+	if( size != 25 ) var_page_size = 'size=' + (string) size;
+	first_page = url_forum;
+	page10_up = url_forum;
+	page_up = url_forum;
+	page_down = url_forum;
+	page10_down = url_forum;
+	last_page = url_forum;
+	if( var_label.size() || var_page_size.size() ){
+		url_page = url_forum;
+		if( var_label.size() ){
+			url_forum += '?' + var_label;
+			url_page = url_forum;
+			if( var_page_size.size() ) url_page += '&' + var_page_size;
+		}else{
+			url_page = url_forum + '?' + var_page_size;
+		}
+		url_forum += '&'
+		first_page = url_page;
+		page10_up = url_page;
+		page_up = url_page;
+		page_down = url_page;
+		page10_down = url_page;
+		last_page = url_page;
+		if( var_page_up ) page_up += '&' + var_page_up;
+		if( var_page_down ) page_down += '&' + var_page_down;
+		if( var_page10_up ) page10_up += '&' + var_page10_up;
+		if( var_page10_down ) page10_down += '&' + var_page10_down;
+		if( var_last_page ) last_page += '&' + var_last_page;
+	}else{
+		url_forum += '?'
+		if( var_page_up ) page_up += '?' + var_page_up;
+		if( var_page_down ) page_down += '?' + var_page_down;
+		if( var_page10_up ) page10_up += '?' + var_page10_up;
+		if( var_page10_down ) page10_down += '?' + var_page10_down;
+		if( var_last_page ) last_page += '?' + var_last_page;
+	}
+	
+	url_map = { "url_forum" => url_forum, "label_string"=>labstr, "first_page"=>first_page, 
+		"page_up" => page_up, "page_down" => page_down,
+		"page10_up" => page10_up, "page10_down" => page10_down,
+		"last_page" => last_page, "range" => range, "total" => (string) total,
+		"url_space" => url_base
+	};
+	css = parts[0];
+	body = parts[1].expand( dict_lang ).expand( url_map, '@' );
+	pinfo1 = parts[2].expand( dict_lang );
+	pinfo2 = parts[3].expand( dict_lang );
+	labtemp = parts[4].chop().expand( dict_lang );
+	nopost = parts[5];
+	labchk = parts[6];
+	topics = "";
+	for( i = 0 : posts.size()-1){
+		post = posts[i];
+		labcode = '';
+		if( labels.size() >i ){
+			labs = labels[i];
+			for( lab in labs ){
+				if( labcode ) labcode += '<br/>';
+				labcode += labtemp.expand( lab, '@' );
+			}
+		}
+		post.labels = labcode;
+		post.url = url_base + "/thread/" + post.tid;
+		style = { "even_style"=> (i%2) ? "class=even" : "" };
+		if( post.commenter.size() ){
+			topics += pinfo2.expand( style, "@" ).expand( post, "@" );
+		}else{
+			topics += pinfo1.expand( style, "@" ).expand( post, "@" );
+		}
+	}
+	for( i = posts.size() : size-1 ){ # XXX page size
+		topics += nopost;
+	}
+	check_labels = '';
+	if( allabs.size() ){
+		allabs.sort::{ [x,y] x.row < y.row or (x.row == y.row and x.sort < y.sort) }
+		lab2 = allabs[0];
+		for( lab in allabs ){
+			if( lab.row != lab2.row ) check_labels += '<br/>';
+			check_labels += labchk.expand( lab, '@' );
+			lab2 = lab;
+		}
+	}
+	data = { "labels"=>check_labels, "postlist"=>topics };
+	return css + body.expand( data, "@" );
+}
+
+
+io.writeln( 'content-type: text/html\n\n' );
+
+
+global forum_page = 0;
+global forum_page_size = 25;
+if( HTTP_GET.has( 'pno' ) ) forum_page = (int) HTTP_GET[ 'pno' ];
+if( HTTP_GET.has( 'size' ) ) forum_page_size = (int) HTTP_GET[ 'size' ];
+
+posts = GetForumPosts( space_owner.uid, forum_page, forum_page_size, label_string );
+
+forum = MakeForum( posts[0], posts[1], label_list, space_owner.username, 
+		forum_page, forum_page_size, label_string, forum_post_count );
+
+title = dict_lang[ 'forum_of' ].expand( { 'user'=>space_owner.fullname } );
+
+io.writeln( MakeFrame( title, forum ) );

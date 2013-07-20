@@ -1,0 +1,50 @@
+
+load web.cgi
+load web_common
+load sdml_html
+
+
+routine ViewEditor( title : string, source : string, section : string, name : string, 
+		check_blog : string, check_forum : string, disabling : map<string,string>, 
+		labels : list<label_t>, tid_edit=0, tid_reply=0, src_reply={=>}, preview='',
+		url_base='' )
+{
+	template = io.read( '::templates/edit_text.html' );
+	parts = template.split( '<!--splitter-->\n' );
+	reply = { 'tid_edit' => (string)tid_edit, 
+		'tid_reply'=>(string)tid_reply, 'section' => section };
+	labtemp = parts[2].expand( dict_lang );
+	labtemp2 = parts[3].expand( dict_lang );
+	titemp = parts[4].expand( dict_lang ).expand( reply, '@' );
+	optemp = parts[5].expand( dict_lang );
+	maintemp = parts[6].expand( dict_lang );
+	check_labels = '';
+	for( lab in labels ) check_labels += labtemp2.expand( lab, '@' );
+	labtemp = labtemp.expand( { 'check_labels' => check_labels }, '@' );
+	titemp = titemp.expand( { 'title'=> title }, '@' );
+	opts = ( check_blog => check_blog, check_forum => check_forum, name => name );
+	optemp = optemp.expand( opts, '@' );
+	optemp = optemp.expand( disabling, '@' );
+	titemp = titemp.expand( disabling, '@' );
+	referer = '';
+	if( HTTP_ENV.has( 'HTTP_REFERER' ) ) referer = HTTP_ENV['HTTP_REFERER'];
+	if( preview ){
+		parser = Sdml2Html();
+		parser.Parse( preview );
+		preview = parser.output;
+	}
+	kv = { 'url_base'=>url_base, 'source' => source, 
+		'HTTP_REFERER'=>referer, 'preview'=>preview };
+	maintemp = maintemp.expand( kv, '@' );
+
+	src = '';
+	if( src_reply.has( 'source' ) and src_reply[ 'source' ].size() ){
+		#parser = Sdml2Html();
+		#parser.Parse( src_reply[ 'source' ] );
+		#src_reply[ 'source' ] = parser.hlcode;
+		src = parts[1].expand( (map<string,string>)src_reply, '@' );
+	}
+	header = parts[0].expand( dict_lang );
+
+	return header + src + labtemp + titemp + optemp + maintemp;
+}

@@ -1,0 +1,167 @@
+
+
+load web_user
+load web_text
+load sdml_html;
+
+
+
+routine AddLabeling( space : int, stid : int, labels={}, blog=0, post=0 )
+{
+	stext = SpaceText{};
+	label = Label{};
+	web_database.Select( SpaceText ).Where().EQ( 'uid_space', space )
+		.EQ( 'stid', stid ).QueryOnce( stext );
+	hd1 = web_database.Select( Label ).Where().EQ( 'uid', space ).EQ( 'name' );
+	hd2 = web_database.Select( TextLabeling ).Where().EQ( 'tid', stext.tid ).EQ( 'lid' );
+	hd3 = web_database.Update( Label ).Add( 'blog_count', blog )
+		.Add( 'post_count', blog ).Where().EQ( 'uid', space ).EQ( 'lid' );
+	labeling = TextLabeling{ tid => stext.tid };
+	for( lab in labels ){
+		if( hd1.Bind( lab ).QueryOnce( label ) ){
+			if( hd2.Bind( label.lid ).QueryOnce( labeling ) ==0 ){
+				labeling.lid = label.lid;
+				web_database.Insert( labeling );
+				hd3.Bind( label.lid ).QueryOnce();
+			}
+		}
+		if( lab == 'chinse' || lab == 'english' ){
+			web_database.Update( Text ).Set( 'language', lab ).Where()
+				.EQ( 'uid_space', space ).EQ( 'stid', stid ).QueryOnce();
+		}
+	}
+	hd1.Done();
+	hd2.Done();
+}
+routine RemoveLabeling( space : int, stid : int, labels={}, blog=0, post=0 )
+{
+	stext = SpaceText{};
+	label = Label{};
+	web_database.Select( SpaceText ).Where().EQ( 'uid_space', space )
+		.EQ( 'stid', stid ).QueryOnce( stext );
+	hd1 = web_database.Select( Label ).Where().EQ( 'uid', space ).EQ( 'name' );
+	hd2 = web_database.Select( TextLabeling ).Where().EQ( 'tid', stext.tid ).EQ( 'lid' );
+	hd3 = web_database.Update( Label ).Add( 'blog_count', - blog )
+		.Add( 'post_count', - blog ).Where().EQ( 'uid', space ).EQ( 'lid' );
+	labeling = TextLabeling{ tid => stext.tid };
+	for( lab in labels ){
+		if( hd1.Bind( lab ).QueryOnce( label ) ){
+			if( hd2.Bind( label.lid ).QueryOnce( labeling ) ){
+				hd3.Bind( label.lid ).QueryOnce();
+				web_database.Delete( TextLabeling ).Where().EQ( 'tid', stext.tid ).EQ( 'lid', label.lid ).QueryOnce();
+			}
+		}
+	}
+	hd1.Done();
+	hd2.Done();
+}
+
+
+#===========
+# Text 
+#===========
+#{
+Commit source:
+if( tid=0 )
+  add as new text item;
+}else{
+  add as revised text;
+}
+#}
+static routine Text::Commit( title : string, source : string, section='', log='', name='', 
+		labels='', stid=0, blog=0, forum=0, space=0, author=0, reply=0 )
+{
+	if( author <=1 ) panic( Exception::Error( 'not logged in' ) );
+	parser = Sdml2Html();
+	time = sys::time();
+	var content = parser.Parse( source );
+	var brief = parser.brief;
+	spacetext = SpaceText{};
+	tokens = labels.split( ";" );
+	labeling = {};
+	nolabeling = {};
+	langlab = 0;
+	for( tok in tokens ){
+		tks = tok.split( ":" );
+		if( tks.size() >=2 ){
+			if( tks[1] == 'true' ){
+				labeling.append( tks[0] );
+				langlab |= web_languages.has( tks[0] )
+			}else{
+				nolabeling.append( tks[0] );
+			}
+		}
+	}
+	if( langlab == 0 ) labeling.append( language2 )
+
+#{
+	The 'blog' and 'forum' tag should not be mutatable,
+	otherwise, if these tags are set in a time different from
+	the time for creation, it will need more fields to display
+	the text in proper time order, which will add much complexity.
+	The 'name' field should not be mutatable as well.
+	In case they should be mutated, create new thread!
+#}
+	hd = web_database.Select( SpaceText ).Where().EQ( 'uid_space', space )
+	.EQ( 'stid', stid ).EQ( 'name' ).EQ( 'blog', blog ).EQ( 'forum', forum ).Bind( name );
+	if( hd.QueryOnce( spacetext ) ){ # modifying a text
+		txt = Text{};
+		web_database.Select( Text ).Where().EQ( 'tid', spacetext.tid ).QueryOnce( txt );
+		if( section ){
+			parser2 = Sdml2Html();
+			parser2.sectindex = section;
+			parser2.Parse( txt.source );
+			source2 = txt.source;
+			source2.replace( parser2.section, source );
+			source = source2;
+			content = parser.Parse( source );
+			brief = parser.brief;
+		}
+		web_database.Update( SpaceText ) .Set( 'time_edit', time )
+			.Where().EQ( 'stid', stid ).QueryOnce();
+		hd = web_database.Update( Text ).Set( 'time_edit', time ).Set( 'title' )
+			.Set( 'preface', parser.preface.size() )
+			.Set( 'brief' ).Set( 'source' ).Set( 'content' )
+			.Where().EQ( 'tid', spacetext.tid );
+		hd.Bind( title,0 ).Bind( brief,1 ).Bind( source,2 ).Bind( content,3 );
+		hd.QueryOnce();
+		AddLabeling( space, spacetext.stid, labeling, spacetext.blog, spacetext.forum );
+		RemoveLabeling( space, spacetext.stid, nolabeling, spacetext.blog, spacetext.forum );
+#XXX revision
+	}else{ # adding a new text
+		ctime = sys::ctime( time );
+		date = ctime.year * 10000 + ctime.month * 100 + ctime.day;
+		spacetext = SpaceText{ blog=>blog, forum=>forum, uid_space=>space, 
+			uid_author=>author, date_create=>date, time_create=>time, time_order=>time,
+			name=>name, stid_reply=>reply };
+		web_database.Insert( spacetext );
+		atext = Text{ stid=>spacetext.stid, uid_space=>space, uid_author=>author,
+			time_create=>time, preface=>parser.preface.size(), name=>name, 
+			title=>title, brief=>brief, 
+			source=>source, content=>content };
+		web_database.Insert( atext );
+		web_database.Update( SpaceText ).Set( 'stid_first', spacetext.stid )
+			.Set( 'tid', atext.tid ).Where()
+			.EQ( 'stid', spacetext.stid ).QueryOnce();
+		stid = spacetext.stid;
+		if( reply ){
+			web_database.Update( SpaceText ).Set( 'uid_commenter', author )
+				.Set( 'stid_last', spacetext.stid ).Set( 'time_comment', time )
+				.Where().EQ( 'stid', reply ).QueryOnce();
+			web_database.Select( SpaceText ).Where().EQ( 'stid', reply )
+				.QueryOnce( spacetext );
+			web_database.Update( SpaceText ).Set( 'stid_first', spacetext.stid_first )
+				.Where().EQ( 'stid', stid ).QueryOnce();
+			web_database.Update( SpaceText ).Set( 'stid_last', stid )
+				.Set( 'uid_commenter', author ).Set( 'time_comment', time )
+				.Set( 'time_order', time ).Add( 'count_reply', 1 )
+				.Where().EQ( 'stid', spacetext.stid_first ).QueryOnce();
+			stid = spacetext.stid_first;
+		}else{
+			AddLabeling( space, spacetext.stid, labeling, spacetext.blog, spacetext.forum );
+			TextStat::Update( space, time, blog, forum );
+		}
+	}
+	return stid, content;
+}
+

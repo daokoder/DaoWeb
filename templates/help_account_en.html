@@ -1,0 +1,60 @@
+
+<div>
+
+<h3>User Account</h3>
+
+<p>Only registered users have permission to post on this website.
+
+<p>Each registered user will automatically obtain a web space with
+blog and forum functionalities (http://@(host)/space/username).
+
+<h3>Account Registration</h3>
+
+<p>In the left login box, one can type the desired user name and
+password, then click the "signup" button and confirm the password,
+then click again the "signup" button to sign up.
+A valid user name is composed of letters and digits,
+and a valid password must be at least 6 characters.
+
+<p>The user is automatically logged in once signed up successfully,
+then the user can click the user name to go to the user's own web space,
+where there is an option to fill up some personal information,
+or change the password.
+
+<p>It is strongly recommended to specify a valid email address of the user, 
+so that this website can send the password to the user in case (s)he forget it. 
+Possibly some future new features of this website may become available to
+a user only if s(he) has specified a valid email address.
+
+<p>daovm.net will not allow public access to the private information of users.
+
+<h3>Find Password</h3>
+
+If the user has specified a valid email in the personal information,
+(s)he can request to send the password to the specified email
+associated with the user name,
+<form name="user_data" method="post" enctype="multipart/form-data"
+action="/ajax_server/?ajax=password">
+<input type="hidden" name="sendpwd" value=""/>
+$(username):<input type="text" name="username" value=""/>
+<input type="submit" id="submit" value="$(send)"/>
+</form>
+<h3>Usage Conditions</h3>
+
+<p>In all cases, the user must avoid political topics 
+in his/her articles and comments, and avoid using of
+bad or insulting words.
+
+<p>If not stated explicitly, the following principles are applied
+when the user posts on the website:
+<ol>
+<li>the user should never post anything copyrighted by others without permission.
+<li>the user copyrights what (s)he posted on this website.
+<li>this website automatically obtain the permission to release the user's post on the website.
+<li>this website has no responsibility for the possible infringement of copyrights
+caused by the user.
+</ol>
+
+This website reserves the rights to block the posts or users that violate these principles.
+
+</div>

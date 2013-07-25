@@ -306,9 +306,8 @@ global web_database
 
 frame {
 	defer { if( recover() ) sys::exit(0) }
-	web_database = 
-		SQLDatabase<MySQL>( WEB_DB_NAME, WEB_DB_HOST, WEB_DB_USER, WEB_DB_PWD )
-		#SQLDatabase<SQLite>( WEB_SQLITE_DB )
+	web_database = SQLDatabase<MySQL>( WEB_DB_NAME, WEB_DB_HOST, WEB_DB_USER, WEB_DB_PWD )
+	#web_database = SQLDatabase<SQLite>( WEB_SQLITE_DB )
 }
 
 

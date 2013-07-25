@@ -124,6 +124,8 @@ routine Sdml2Html::MakeLink( name='', tok1='', tok2='' )=>string
 		code += "/space" + tok1 + "/page/" + tok2;
 	}else if( tok1.pfind( '^ %w+ (|#[%d%.]*) $' ) ){
 		code += "@(url_base_" + suffix + ")/page/" + tok1;
+	}else if( name.pfind( '^ %s* ( {{http://}} | {{https://}} )' ) ){
+		code += name;
 	}else{
 		code += tok1;
 	}

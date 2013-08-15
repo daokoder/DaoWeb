@@ -18,7 +18,7 @@ routine GetNewsTitles( space : User )
 		.Match( SpaceText, Text, 'tid' )
 		.Sort( SpaceText, 'time_create', 1 ).Range( 10 );
 	#stdio.println( hd.sqlstring() );
-	news = {};
+	news : list<news_t> = {};
 	txt = Text{};
 	sptxt = SpaceText{};
 	tlab = TextLabeling{};
@@ -38,8 +38,8 @@ routine GetTextStat( user : User, year = 0, month = 0, day = 0 )
 	stat = TextStat{};
 	signup = sys::ctime( user.time_signup )
 	now = sys::ctime();
-	blog_counts = {};
-	post_counts = {};
+	blog_counts : list<int> = {};
+	post_counts : list<int> = {};
 	year *= 10000;
 	month *= 100;
 	hd = web_database.Select( TextStat ).Where().EQ( 'suid', user.uid ).EQ( 'time_range' );

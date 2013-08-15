@@ -6,7 +6,7 @@ load sdml_html
 
 routine ViewEditor( title : string, source : string, section : string, name : string, 
 		check_blog : string, check_forum : string, disabling : map<string,string>, 
-		labels : list<label_t>, tid_edit=0, tid_reply=0, src_reply={=>}, preview='',
+		labels : list<label_t>, tid_edit=0, tid_reply=0, src_reply:map<string,any>={=>}, preview='',
 		url_base='' )
 {
 	template = io.read( '::templates/edit_text.html' );

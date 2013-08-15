@@ -69,7 +69,7 @@ routine GetForumPosts( space : int, page : int, size : int, labs : string )
 			(string)p[4], PassedTime( p[5] ), FormatTime( p[5] ), (string)p[6], (string)p[7], '' };
 		posts2.append( post2 );
 		hd3.Bind( p[0] );
-		plabs = {};
+		plabs : list<label_t> = {};
 		while( hd3.Query( labeling, label ) ) plabs.append( label.AsTuple() );
 		hd3.Done();
 		postlabs.append( plabs );

@@ -5,7 +5,7 @@ load web_data
 routine GetLabels( space : int )
 {
 	label = Label{};
-	labels = {};
+	labels : list<label_t> = {};
 	hd = web_database.Select( Label ).Where().EQ( 'uid', space );
 	while( hd.Query( label ) ) labels.append( label.AsTuple() );
 	return labels;

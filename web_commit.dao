@@ -6,7 +6,7 @@ load sdml_html;
 
 
 
-routine AddLabeling( space : int, stid : int, labels={}, blog=0, post=0 )
+routine AddLabeling( space : int, stid : int, labels :list<string> ={}, blog=0, post=0 )
 {
 	stext = SpaceText{};
 	label = Label{};
@@ -33,7 +33,7 @@ routine AddLabeling( space : int, stid : int, labels={}, blog=0, post=0 )
 	hd1.Done();
 	hd2.Done();
 }
-routine RemoveLabeling( space : int, stid : int, labels={}, blog=0, post=0 )
+routine RemoveLabeling( space : int, stid : int, labels :list<string>={}, blog=0, post=0 )
 {
 	stext = SpaceText{};
 	label = Label{};
@@ -78,8 +78,8 @@ static routine Text::Commit( title : string, source : string, section='', log=''
 	var brief = parser.brief;
 	spacetext = SpaceText{};
 	tokens = labels.split( ";" );
-	labeling = {};
-	nolabeling = {};
+	labeling :list<string> = {};
+	nolabeling :list<string> = {};
 	langlab = 0;
 	for( tok in tokens ){
 		tks = tok.split( ":" );

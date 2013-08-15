@@ -76,7 +76,7 @@ routine GetBlogs( space : User, year=0, month=0, day=0, page=0, lablist : list<l
 	for( thd in blogs ){
 		hd = web_database.Select( TextLabeling, Label ).Where()
 			.EQ( TextLabeling, 'tid', thd.tid ).Match( TextLabeling, Label, 'lid' );
-		lbs = {};
+		lbs :list<label_t> = {};
 		while( hd.Query( txtlab, label ) ) lbs.append( label.AsTuple() );
 		labs.append( lbs );
 		hd.Done();

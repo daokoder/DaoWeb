@@ -72,7 +72,7 @@ routine AddImage( imgstream : io::stream, name = '' )
 
 
 
-AddImage( image, name );
+AddImage( image.data, name );
 
 javascript = '
 <script language="javascript" type="text/javascript">

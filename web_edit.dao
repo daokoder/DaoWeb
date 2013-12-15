@@ -125,7 +125,7 @@ if( tid_reply ) for( lab in label_list ) lab.checked = 'disabled';
 
 preview = '';
 if( HTTP_FILE.has( 'source' ) ){
-	preview = HTTP_FILE[ 'source' ].read(-1);
+	preview = HTTP_FILE[ 'source' ].data.read(-1);
 	source['source'] = preview;
 }
 src = source['source'];

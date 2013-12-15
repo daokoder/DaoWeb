@@ -136,9 +136,9 @@ routine DaoCodeHL::Highlight( source : string, name = '' )=>string
 			tmp.replace( "<", "&lt;" );
 			tmp.replace( ">", "&gt;" );
 			output += tag + tmp + "</span>";
-		}else if( tok.pfind( '^ ( 0 (x|X) %x+ | %d[%d%.]+ | [%C_%d]+ ) $' ) ){
+		}else if( %tok.pfind( '^ ( 0 (x|X) %x+ | %d[%d%.]+ | [%C_%d]+ ) $' ) ){
 			output += "<span class=Number>" + tok + "</span>";
-		}else if( tok.pfind( '^ %$ %w+ $' ) ){
+		}else if( %tok.pfind( '^ %$ %w+ $' ) ){
 			output += "<span class=Number>" + tok + "</span>";
 		}else if( i+2 <size && tokens[i+1]=="@" && tokens[i+2]=="END" ){
 			tmp = tok[1:];
@@ -216,7 +216,7 @@ routine CppCodeHL::Highlight( source : string, name = '' )=>string
 			tmp.replace( "<", "&lt;" );
 			tmp.replace( ">", "&gt;" );
 			output += Block[ tok[0:0] ] + tmp + "</span>";
-		}else if( tok.pfind( '^ ( 0 (x|X) %x+ | %d[%d%.]+ | [%C_%d]+ ) $' ) ){
+		}else if( %tok.pfind( '^ ( 0 (x|X) %x+ | %d[%d%.]+ | [%C_%d]+ ) $' ) ){
 			output += "<span class=Number>" + tok + "</span>";
 		}else if( tok == "#" ){
 			output += "<span class=SpecSymbol>" + tok + tokens[i+1] + "</span>";
@@ -370,7 +370,7 @@ routine SdmlCodeHL2::HL( source : string )=>string
 	output = '';
 	for( tok in tokens ){
 		tks = tok.capture( pat2 );
-		if( tks ){
+		if( %tks ){
 			tag = tks[2];
 			tk1 = tks[1];  tk1.replace( Replace );
 			tk4 = tks[4];  tk4.replace( Replace );

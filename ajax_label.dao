@@ -12,7 +12,7 @@ routine DeleteLabel( space : int, name : string )
 routine CreateLabel( space : int, name : string )
 {
 	hd = web_database.Select( Label ).Where().EQ( 'uid', space ).EQ( 'name' ).Bind( name );
-	label = Label{ uid => space, name => name, color => '#0f0' };
+	label = Label::{ uid => space, name => name, color => '#0f0' };
 	if( hd.QueryOnce( label ) ) return 0;
 	web_database.Insert( label );
 	return 1;

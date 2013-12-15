@@ -7,7 +7,7 @@ global space_owner : User;
 if( space_owner == User::default ){
 	host = '';
 	if( HTTP_ENV.has( 'HTTP_HOST' ) ) host = HTTP_ENV[ 'HTTP_HOST' ];
-	space_owner = User{};
+	space_owner = User::{};
 	if( HTTP_GET.has( 'space' ) ){
 		space_owner.username = HTTP_GET[ 'space' ];
 	}else if( HTTP_POST.has( 'space' ) ){
@@ -47,22 +47,21 @@ static routine User::Identify( cookie ='' )
 	setcookie = '';
 
 	if( Super == User::default ){
-		Super = User{};
-		Current = User{};
+		Super = User::{};
+		Current = User::{};
 		handle = web_database.Select( User ).Where().EQ( "username" ).Bind( WEB_SPACE );
 		handle.QueryOnce( Super );
 	}
 	Status = USER_NOT_LOGIN;
 
-	online = Online{};
+	online = Online::{};
 	handle = web_database.Select( User, Online ).Where().EQ( Online, "cookie" )
 		.Match( User, Online, "uid" ).Bind( cookie );
 
-	while( handle.Query( Current, online ) ){
+	handle.Query( Current, online ){
 		User::Status = USER_WAS_LOGIN;
 		time = sys::time();
 		if( ( time - online.time_active ) < 3600 ){
-			handle.Done();
 			User::Status = USER_IS_LOGIN;
 			handle2 = web_database.Update( Online ).Set( "time_active", time ).Where().EQ( "uid", Current.uid );
 			handle2.QueryOnce();
@@ -74,7 +73,6 @@ static routine User::Identify( cookie ='' )
 			User::Current.username = '';
 		}
 	}
-	handle.Done();
 	return setcookie;
 }
 
@@ -99,7 +97,7 @@ static routine User::SignUp( name : string, pwd :string, pwd2 :string )
 	if( errormsg.size() == 0 ){
 		pwd = pwd.encrypt( WEB_PWD_KEY, $hex );
 		time = sys::time();
-		user = User{ username => name, password => pwd, time_signup => time };
+		user = User::{ username => name, password => pwd, time_signup => time };
 		web_database.Insert( user );
 #{ not needed anymore; use url rewriting instead
 		MakeFolds( name );
@@ -128,7 +126,7 @@ static routine User::Login( name : string, pwd : string )
 	if( errormsg.size() ) return errormsg;
 
 	tm = sys::time();
-	online = Online{ uid=> Current.uid, time_login=> tm, time_active=> tm, cookie=> cookie};
+	online = Online::{ uid=> Current.uid, time_login=> tm, time_active=> tm, cookie=> cookie};
 	handle = web_database.Select( Online ).Where().EQ( "uid", Current.uid );
 	if( handle.QueryOnce( online ) ==0 ) web_database.Insert( online );
 	handle = web_database.Update( Online ).Set( "cookie" ).Set( "time_login", tm )

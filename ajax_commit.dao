@@ -50,14 +50,14 @@ parser.Parse( source );
 
 
 defer {
-	if( recover() ) io.writeln( failed.expand( { 'info' => 'Failed to submit text' } ) );
+	if( %recover() ) io.writeln( failed.expand( { 'info' => 'Failed to submit text' } ) );
 }
 
 ret = Text::Commit( title, source, section, '', name, labels, 
 		edit, blog, forum, space_owner.uid, User::Current.uid, reply );
 
 kv = { 'space' => space };
-if( name ){
+if( %name ){
 	kv[ 'topic' ] = 'page';
 	kv[ 'stid' ] = name;
 }else{

@@ -2,8 +2,8 @@
 load web_config;
 load web_common;
 load DaoSQL;
-#load DaoSQLite;
-load DaoMySQL;
+load DaoSQLite;
+#load DaoMySQL;
 
 global enum UserStatusType
 {
@@ -305,9 +305,10 @@ class Image
 global web_database
 
 frame {
-	defer { if( recover() ) sys::exit(0) }
-	web_database = SQLDatabase<MySQL>( WEB_DB_NAME, WEB_DB_HOST, WEB_DB_USER, WEB_DB_PWD )
-	#web_database = SQLDatabase<SQLite>( WEB_SQLITE_DB )
+	defer { if( %recover() ) sys::exit(0) }
+	web_database = 
+		#SQLDatabase<MySQL>( WEB_DB_NAME, WEB_DB_HOST, WEB_DB_USER, WEB_DB_PWD )
+		SQLDatabase<SQLite>( WEB_SQLITE_DB )
 }
 
 
@@ -321,7 +322,7 @@ static routine TextStat::Update( space : int, time : int, blog=0, post=0 )
 	tm[1] = ctime.year * 10000;
 	tm[2] = tm[1] + ctime.month * 100;
 	tm[3] = tm[2] + ctime.day;
-	stat = TextStat{ suid => space };
+	stat = TextStat::{ suid => space };
 	hd1 = web_database.Select( TextStat ).Where().EQ( 'time_range' ).EQ( 'suid', space );
 	hd2 = web_database.Update( TextStat ).Add( 'blog_count', blog )
 		.Add( 'post_count', post ).Where().EQ( 'time_range' ).EQ( 'suid', space );
@@ -343,15 +344,15 @@ static routine TextHit::Update( tid = 0 )
 {
 	var ip = HTTP_ENV[ 'REMOTE_ADDR' ];
 	var agent = frame(''){ HTTP_ENV[ 'HTTP_USER_AGENT' ] };
-	if( agent.pfind( '<I>( bot | spider)' ) ){
+	if( %agent.pfind( '<I>( bot | spider)' ) ){
 		agent = agent.match( '%w+ %s* <I>( bot | spider)' ).substring;
-	}else if( agent.pfind( '<I> yahoo' ) ){
+	}else if( %agent.pfind( '<I> yahoo' ) ){
 		agent = agent.match( '<I>( yahoo %s* %! %s* slurp' ).substring;
 	}else{
 		agent = agent.match( '%w+ %s* / %s* %d+ (|%.%d+)' ).substring;
 	}
 	hd = web_database.Select( TextHit ).Where().EQ( 'tid', tid ).EQ( 'ip', ip );
-	hit = TextHit{ tid=>tid, time=>time_now, count=>1, agent=>agent, ip=>ip };
+	hit = TextHit::{ tid=>tid, time=>time_now, count=>1, agent=>agent, ip=>ip };
 	add = 1;
 	if( hd.QueryOnce( hit ) ){
 		if( time_now < hit.time + 3600 ) add = 0;
@@ -380,7 +381,7 @@ routine VisitStat::Update( suid : int, stid : int, cid : int, time : int )
 	tm[1] = ctime.year * 10000;
 	tm[2] = tm[1] + ctime.month * 100;
 	tm[3] = tm[2] + ctime.day;
-	stat = VisitStat{ suid => suid, cid => cid };
+	stat = VisitStat::{ suid => suid, cid => cid };
 	hd1 = web_database.Select( VisitStat ).Where().EQ( 'time_range' ).EQ( 'suid', suid ).EQ( 'stid' ).EQ( 'cid', cid );
 	hd2 = web_database.Update( VisitStat ).Add( 'count', 1 ).Where().EQ( 'time_range' ).EQ( 'suid', suid ).EQ( 'stid' ).EQ( 'cid', cid );
 	for( tid in tids ){

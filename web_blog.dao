@@ -12,7 +12,7 @@ routine GetBlogs( space : User, year=0, month=0, day=0, page=0, lablist : list<l
 	for( lab in lablist ){
 		if( lab.checked == 'checked' ){
 			labids.append( lab.lid );
-			if( url ) url += '&';
+			if( %url ) url += '&';
 			url += 'labels=' + lab.name;
 		}
 	}
@@ -29,15 +29,15 @@ routine GetBlogs( space : User, year=0, month=0, day=0, page=0, lablist : list<l
 	hd.EQ( SpaceText, 'blog', 1 );
 	if( day ){
 		hd.EQ( SpaceText, 'date_create', date1 );
-		if( url ) url += '&';
+		if( %url ) url += '&';
 		url += ('year=' + (string) year) + ('&month=' + (string) month) + ('&day=' + (string) day);
 	}else if( month ){
 		hd.GT( SpaceText, 'date_create', date1 ).LT( SpaceText, 'date_create', date2 );
-		if( url ) url += '&';
+		if( %url ) url += '&';
 		url += ('year=' + (string) year) + ('&month=' + (string) month);
 	}else if( year ){
 		hd.GT( SpaceText, 'date_create', date1 ).LT( SpaceText, 'date_create', date3 );
-		if( url ) url += '&';
+		if( %url ) url += '&';
 		url += ('year=' + (string) year);
 	}
 	hd.EQ( SpaceText, 'stid_reply', 0 ).Match( SpaceText, Text, 'tid' )
@@ -46,15 +46,15 @@ routine GetBlogs( space : User, year=0, month=0, day=0, page=0, lablist : list<l
 	blogs : list<postthread> = {};
 	labs : list<list<label_t>> = {};
 	uid2name = { => };
-	txtlab = TextLabeling{};
-	label = Label{};
-	user = User{};
-	txt = Text{};
-	sptxt = SpaceText{};
-	while( hd.Query( sptxt, txt, txtlab ) ){
+	txtlab = TextLabeling::{};
+	label = Label::{};
+	user = User::{};
+	txt = Text::{};
+	sptxt = SpaceText::{};
+	hd.Query( sptxt, txt, txtlab ){
 		uid2name[ sptxt.uid_author ] = '';
 		#thd = (postthread)('','','','','','','','','','',0,'');
-		thd = postthread{'','','','','','','','','','',0,''};
+		thd = postthread::{'','','','','','','','','','',0,''};
 		thd.tid = (string) sptxt.stid;
 		thd.uid = (string) sptxt.uid_author;
 		thd.replies = (string) sptxt.count_reply;
@@ -70,7 +70,6 @@ routine GetBlogs( space : User, year=0, month=0, day=0, page=0, lablist : list<l
 		thd.content = CompleteText( txt.stid, content, space.username );
 		blogs.append( thd );
 	}
-	hd.Done();
 #{
 #}
 	for( thd in blogs ){
@@ -79,13 +78,11 @@ routine GetBlogs( space : User, year=0, month=0, day=0, page=0, lablist : list<l
 		lbs :list<label_t> = {};
 		while( hd.Query( txtlab, label ) ) lbs.append( label.AsTuple() );
 		labs.append( lbs );
-		hd.Done();
 	}
 	hd = web_database.Select( User ).Where().EQ( 'uid' );
 	for( uid in uid2name.keys() ){
 		if( hd.Bind( uid ).Query( user ) ) uid2name[ uid ] = user.username;
 	}
-	hd.Done()
 	for( thd in blogs ) thd.author = uid2name[ (int) thd.uid ];
 	return blogs, labs, url;
 }
@@ -114,7 +111,7 @@ routine MakeBlogs( blogs : list<postthread>, labels : list<list<label_t> >,
 	td2 = '<td style="font-size: 25pt; font-weight: bold; text-align: right">';
 	pageup = td1 + '<a href="$(url_base)/blog/?$(urldata)page=$(pageup)">&#8656;</a></td>';
 	pagedown = td2 + '<a href="$(url_base)/blog/?$(urldata)page=$(pagedown)">&#8658;</a></td>';
-	km = { 'url_base'=>url_base, 'urldata'=>urldata + (urldata ? '&' : ''),
+	km = { 'url_base'=>url_base, 'urldata'=>urldata + (%urldata ? '&' : ''),
 		'pageup'=>(string)(page-1), 'pagedown'=>(string)(page+1) }
 	source += '<table><tr>\n'
 	if( page ){
@@ -147,6 +144,6 @@ if( HTTP_GET.has( 'page' ) ) page = (int) HTTP_GET['page'];
 data = GetBlogs( space_owner, archive_year, archive_month, archive_day, page, label_list );
 blogs = MakeBlogs( data[0], data[1], url_base2, User::Current.uid, page, data[2] );
 title = dict_lang[ 'blog_of' ].expand( { 'user'=>space_owner.fullname } );
-if( archive_date ) title += ' ' + archive_date;
-if( label_string ) title += ' [' + label_string + ']';
+if( %archive_date ) title += ' ' + archive_date;
+if( %label_string ) title += ' [' + label_string + ']';
 io.writeln( MakeFrame( title, blogs ) );

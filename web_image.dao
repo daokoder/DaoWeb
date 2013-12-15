@@ -8,7 +8,7 @@ if( HTTP_GET.has( 'size' ) ) size = HTTP_GET[ 'size' ];
 idmap = { 'small'=>7, 'medium'=>8, 'large'=>9 };
 
 if( name.size() ){
-   image = Image{};
+   image = Image::{};
    hd = web_database.Select( Image, idmap[ size ] ).Where()
       .EQ( 'space', space_owner.uid ).EQ( 'name' ).Bind( name );
    if( hd.QueryOnce( image ) ){

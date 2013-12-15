@@ -70,7 +70,7 @@ if( HTTP_GETS.has( 'labels' ) or HTTP_POSTS.has( 'labels' ) ){
 	}
 }
 
-global text_counts : tuple<int,int,list<int>,list<int> > = (0,0,{},{});
+global text_counts : tuple<int,int,list<int>,list<int> > = (0,0,(list<int>){},(list<int>){});
 
 global archive_year  = 0; #ctime_now.year;
 global archive_month = 0; #ctime_now.month;
@@ -121,12 +121,12 @@ global latest_post = GetLatestText( space_owner, 3 );
 global forum_post_count = text_counts[1];
 global label_checked = 0;
 for( lab in label_list ){
-	if( lab.checked ) label_checked += 1;
+	if( %lab.checked ) label_checked += 1;
 }
 if( label_string.size() && label_checked == 1 ){
 	forum_post_count = 0;
 	for( lab in label_list ){
-		if( lab.checked ) forum_post_count += lab.pcount;
+		if( %lab.checked ) forum_post_count += lab.pcount;
 	}
 }
 
@@ -213,6 +213,7 @@ routine MakeMenu( template : string, menu : listst )
 
 routine MakeFrame( title : string, body = '', homepage = 0 )
 {
+	change_lang = io.read( "::templates/languages.html" ).expand( dict_lang );
 	temp_topmenu = io.read( "::templates/topmenu.html" );
 	temp_sidemenu = io.read( "::templates/sitemap_" + language + ".html" );
 	temp_bottom = io.read( "::templates/about_" + language + ".html" );
@@ -295,7 +296,7 @@ routine MakeFrame( title : string, body = '', homepage = 0 )
 
 	titles = GetNewsTitles( space_owner );
 	news = '';
-	if( titles ){
+	if( %titles ){
 		news  = '<div style="font-weight:bold;margin-top:20pt;margin-bottom:10pt">';
 		news += dict_lang[ 'Latest News' ] + '</div>\n';
 		news += '<div style="margin-bottom:30pt;border:2px solid #D8DADD">'

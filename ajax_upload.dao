@@ -35,7 +35,7 @@ routine AddImage( imgstream : io::stream, name = '' )
 	height = MagickGetImageHeight( magick_wand );
 #  Method not available in GraphicsMagick:
 	#if( width * height > 2E5 ) MagickSetImageFormat( magick_wand, 'JPG' );
-	image = Image{};
+	image = Image::{};
 	image.space = space_owner.uid;
 	image.name = name;
 	image.format = MagickGetImageFormat( magick_wand );

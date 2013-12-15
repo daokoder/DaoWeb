@@ -44,7 +44,7 @@ if( npart > 1 ){
 item = '<span style="padding-left:20px"><a href="' + url_base2 + '/page/$(page)">$(version)</a></span>';
 vnames = GetVersion( p[6] );
 vinfo = '';
-if( vnames ){
+if( %vnames ){
 	vinfo = dict_lang[ 'other_versions' ] + ':'
 	vname = '';
 	for( vname in vnames ){

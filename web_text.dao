@@ -5,7 +5,7 @@ load web_user
 routine GetNewsTitles( space : User )
 {
 	lid = -1;
-	lab = Label{};
+	lab = Label::{};
 	hd = web_database.Select( Label ).Where().EQ( 'uid', space.uid ).EQ( 'name' )
 	if( hd.Bind( 'news' ).QueryOnce( lab ) ) lid = lab.lid
 	member = Text::title_index;
@@ -19,23 +19,22 @@ routine GetNewsTitles( space : User )
 		.Sort( SpaceText, 'time_create', 1 ).Range( 10 );
 	#stdio.println( hd.sqlstring() );
 	news : list<news_t> = {};
-	txt = Text{};
-	sptxt = SpaceText{};
-	tlab = TextLabeling{};
-	while( hd.Query( tlab, sptxt, txt ) ){
+	txt = Text::{};
+	sptxt = SpaceText::{};
+	tlab = TextLabeling::{};
+	hd.Query( tlab, sptxt, txt ){
 		thd = (news_t)('','','');
 		thd.tid = (string) sptxt.stid;
 		thd.topic = txt.title;
 		thd.time = FormatTime( sptxt.time_create );
 		news.append( thd );
 	}
-	hd.Done();
 	return news;
 }
 
 routine GetTextStat( user : User, year = 0, month = 0, day = 0 )
 {
-	stat = TextStat{};
+	stat = TextStat::{};
 	signup = sys::ctime( user.time_signup )
 	now = sys::ctime();
 	blog_counts : list<int> = {};
@@ -55,7 +54,7 @@ routine GetTextStat( user : User, year = 0, month = 0, day = 0 )
 		for( i = 1 : 12 ){
 			stat.blog_count = 0;
 			stat.post_count = 0;
-			hd.Bind( year + i * 100 ).Query( stat );
+			hd.Bind( year + i * 100 ).QueryOnce( stat );
 			blog_counts.append( stat.blog_count );
 			post_counts.append( stat.post_count );
 		}
@@ -63,16 +62,15 @@ routine GetTextStat( user : User, year = 0, month = 0, day = 0 )
 		for( i = 1 : 31 ){
 			stat.blog_count = 0;
 			stat.post_count = 0;
-			hd.Bind( year + month + i ).Query( stat );
+			hd.Bind( year + month + i ).QueryOnce( stat );
 			blog_counts.append( stat.blog_count );
 			post_counts.append( stat.post_count );
 		}
 	}else{
-		hd.Bind( year + month + day ).Query( stat );
+		hd.Bind( year + month + day ).QueryOnce( stat );
 		blog_counts.append( stat.blog_count );
 		post_counts.append( stat.post_count );
 	}
-	hd.Done();
 	web_database.Select( TextStat ).Where().EQ( 'suid', user.uid )
 		.EQ( 'time_range', 0 ).QueryOnce( stat );
 	return stat.blog_count, stat.post_count, blog_counts, post_counts;
@@ -82,9 +80,9 @@ routine GetTextStat( user : User, year = 0, month = 0, day = 0 )
 routine GetLatestText( owner : User, blog_com_post=1 ) => list<recent_text>
 {
 	texts : list<recent_text> = {};
-	user = User{};
-	atext = Text{};
-	sptext = SpaceText{};
+	user = User::{};
+	atext = Text::{};
+	sptext = SpaceText::{};
 	time = time_now - month_in_seconds;
 	hd = web_database.Select( SpaceText, Text, 11, User ).Where()
 		.EQ( SpaceText, 'uid_space', owner.uid );
@@ -98,15 +96,14 @@ routine GetLatestText( owner : User, blog_com_post=1 ) => list<recent_text>
 	hd.GT( SpaceText, 'time_create', time ).Match( SpaceText, Text, 'tid' )
 		.Match( SpaceText, User, 'uid_author', 'uid' )
 		.Sort( SpaceText, 'time_create', 1 ).Range( 5 );
-	while( hd.Query( sptext, atext, user ) ){
+	hd.Query( sptext, atext, user ){
 #{
 		texts.append( (recent_text)(sptext.stid_first, sptext.stid, sptext.time_create,
 					user.username, atext.title, atext.brief));
 #}
-		texts.append( recent_text{ sptext.stid_first, sptext.stid, sptext.time_create,
+		texts.append( recent_text::{ sptext.stid_first, sptext.stid, sptext.time_create,
 					user.username, atext.title, atext.brief } );
 	}
-	hd.Done();
 	return texts;
 }
 
@@ -143,8 +140,8 @@ routine GetPage( space : User, name : string, edit=0 )
 	hd = web_database.Select( SpaceText, Text ).Where()
 		.EQ( SpaceText, 'uid_space', space.uid ).EQ( SpaceText, 'name' )
 		.Match( SpaceText, Text, 'tid' ).Bind( name );
-	txt = Text{};
-	sptxt = SpaceText{};
+	txt = Text::{};
+	sptxt = SpaceText::{};
 	page = dict_lang[ 'page_under_construction' ];
 	if( hd.QueryOnce( sptxt, txt ) == 0 ) return 0, page, '<h2>' + page + '</h2>', 0,0,0,0;
 	TextHit::Update( txt.tid );
@@ -155,10 +152,9 @@ routine GetPage( space : User, name : string, edit=0 )
 routine GetVersion( tid : int )
 {
 	hd = web_database.Select( TextVersion ).Where().EQ( 'tid', tid );
-	tv = TextVersion{};
+	tv = TextVersion::{};
 	vnames = {};
-	while( hd.Query( tv ) ) vnames.append( tv.vname );
-	hd.Done();
+	hd.Query( tv ){ vnames.append( tv.vname ); }
 	return vnames;
 }
 
@@ -169,8 +165,8 @@ routine GetSource( space : int, stid : int, section='', labels : list<label_t> =
 	hd = web_database.Select( SpaceText, Text ).Where()
 		.EQ( SpaceText, 'uid_space', space ).EQ( SpaceText, 'stid', stid )
 		.Match( SpaceText, Text, 'tid' );
-	sptxt = SpaceText{};
-	txt = Text{};
+	sptxt = SpaceText::{};
+	txt = Text::{};
 	hd.QueryOnce( sptxt, txt );
 	source = txt.source;
 	#{
@@ -182,12 +178,11 @@ routine GetSource( space : int, stid : int, section='', labels : list<label_t> =
 	}
 	#}
 	if( labels.size() ){
-		txtlab = TextLabeling{};
+		txtlab = TextLabeling::{};
 		hd = web_database.Select( TextLabeling ).Where().EQ( 'tid', sptxt.tid ).EQ( 'lid' );
 		for( lab in labels ){
 			if( hd.Bind( lab.lid ).QueryOnce( txtlab ) ) lab.checked = 'checked';
 		}
-		hd.Done();
 	}
 	return { 'title' => txt.title, 'source' => source, 'section' => section,
 		'name' => sptxt.name, 'blog'=>sptxt.blog, 'forum'=>sptxt.forum };

@@ -31,8 +31,8 @@ if( caps[2] == 'text' ){
 
 	# display labeling
 	labs = GetTextLabel( tid, label_list );
-	text = Text{};
-	sptx = SpaceText{};
+	text = Text::{};
+	sptx = SpaceText::{};
 	web_database.Select( Text, 10, SpaceText, 4 ).Where().EQ( Text, 'tid', tid )
 		.Match( Text, SpaceText, 'tid' ).QueryOnce( text, sptx );
 	
@@ -65,14 +65,13 @@ hd = web_database.Select( User, Online ).Where().Match( User, Online, 'uid' )
 		.Sort( Online, 'time_login', 1 );
 
 user = User();
-online = Online{};
-while( hd.Query( user, online ) ){
+online = Online::{};
+hd.Query( user, online ){
 	time = '( signup: ' + FormatTime2( user.time_signup );;
 	if( online.time_login ) time += ', login: ' + FormatTime2( online.time_login );
 	time += ' )';
 	rows += row.expand( (id=>user.uid, id2=>'', name=>user.username + time, count=>''), '@' );
 }
-hd.Done();
 rows += row.expand( (id=>'', id2=>'', name=>'', count=>''), '@' );
 
 row = '<tr>
@@ -82,9 +81,9 @@ row = '<tr>
 <td style="border: solid thin #ccc">@(count)</td></tr>'
 hd = web_database.Select( SpaceText, Text, 11 ).Where().EQ( 'stid_reply', 0 )
 	.Match( SpaceText, Text, 'tid' );
-spt = SpaceText{};
-txt = Text{};
-while( hd.Query( spt, txt ) ){
+spt = SpaceText::{};
+txt = Text::{};
+hd.Query( spt, txt ){
 	name = '';
 	if( spt.name == '' ){
 		name = txt.title;

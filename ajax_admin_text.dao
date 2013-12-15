@@ -22,8 +22,8 @@ if( uid ==0 || (uid != space_owner.uid && uid != 9) ){ # fu
 }
 
 tokens = label_string.split( ";" );
-labeling = {};
-nolabeling = {};
+labeling : list<string> = {};
+nolabeling : list<string> = {};
 for( tok in tokens ){
 	tks = tok.split( ":" );
 	if( tks.size() >=2 ){
@@ -34,14 +34,14 @@ for( tok in tokens ){
 		}
 	}
 }
-text = Text{};
-sptx = SpaceText{};
+text = Text::{};
+sptx = SpaceText::{};
 web_database.Select( Text ).Where().EQ( 'tid', edit ).QueryOnce( text );
 if( text.name != name ){
 	if( HTTP_POST.has( 'create_version' ) ){
 		Text::Commit( text.title, text.source, '','', name, '', 0,0,0, text.uid_space, text.uid_author );
 		web_database.Select( Text ).Where().EQ( 'name' ).Bind( name ).QueryOnce( text );
-		tv = TextVersion{ edit, text.tid, name };
+		tv = TextVersion::{ edit, text.tid, name };
 		web_database.Insert( tv );
 		edit = text.tid;
 	}

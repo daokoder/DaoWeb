@@ -29,13 +29,13 @@ if( etype == 'user' ){
 	page = page.expand( dict_lang );
 	
 	status = '';
-	userinfo = UserInfo{ space_owner.uid };
+	userinfo = UserInfo::{ space_owner.uid };
 	
 	if( HTTP_POST.size() ){
 		oldpwd = HTTP_POST[ 'oldpwd' ];
 		newpwd1 = HTTP_POST[ 'newpwd1' ];
 		newpwd2 = HTTP_POST[ 'newpwd2' ];
-		if( oldpwd ){
+		if( %oldpwd ){
 			oldpwd = oldpwd.encrypt( WEB_PWD_KEY, $hex );
 			if( oldpwd != space_owner.password ){
 				status = 'wrong_password';
@@ -85,10 +85,10 @@ name = ''
 if( etype == 'page' ){
 	uri = HTTP_ENV.has( 'REQUEST_URI' ) ? HTTP_ENV[ 'REQUEST_URI' ] : '/';
 	caps = uri.capture( '^ / space / %w+ / edit / page / (%w+)' )
-	if( caps ) name = caps[1]
+	if( %caps ) name = caps[1]
 	tid = frame(0){ (int) name };
 }
-if( name.pfind( '%w' ) ) etype = 'page';
+if( %name.pfind( '%w' ) ) etype = 'page';
 
 source = GetSource( space_owner.uid, tid, section, label_list );
 reply = GetSource( space_owner.uid, tid_reply );

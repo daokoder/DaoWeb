@@ -28,7 +28,7 @@ routine ViewEditor( title : string, source : string, section : string, name : st
 	titemp = titemp.expand( disabling, '@' );
 	referer = '';
 	if( HTTP_ENV.has( 'HTTP_REFERER' ) ) referer = HTTP_ENV['HTTP_REFERER'];
-	if( preview ){
+	if( %preview ){
 		parser = Sdml2Html();
 		parser.Parse( preview );
 		preview = parser.output;

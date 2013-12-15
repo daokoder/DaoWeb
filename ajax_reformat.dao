@@ -6,7 +6,7 @@ if( not WEB_ADMINS.has( User::Current.username ) ) return
 
 
 tid = 0
-text = Text{};
+text = Text::{};
 retrieve = web_database.Select( Text ).Where().GE( 'tid' ).Range( 1 )
 update = web_database.Update( Text ).Set( 'preface' ).Set( 'content' ).Where().EQ( 'tid' )
 

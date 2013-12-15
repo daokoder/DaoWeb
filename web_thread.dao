@@ -11,9 +11,9 @@ routine GetThread( space : User, stid : int, comment = 0, edit=0 )
 	coms : list<postcomment> = {};
 	labs : list<label_t> = {};
 	uid2name = { => };
-	user = User{};
-	txt = Text{};
-	sptxt = SpaceText{};
+	user = User::{};
+	txt = Text::{};
+	sptxt = SpaceText::{};
 	if( hd.QueryOnce( sptxt, txt ) ){
 		thd.tid = (string) sptxt.stid;
 		thd.uid = (string) sptxt.uid_author;
@@ -34,7 +34,7 @@ routine GetThread( space : User, stid : int, comment = 0, edit=0 )
 			.EQ( SpaceText, 'stid_first', sptxt.stid )
 			.NE( SpaceText, 'stid', sptxt.stid )
 			.Match( SpaceText, Text, 'tid' ).Sort( SpaceText, 'time_create' );
-		while( hd.Query( sptxt, txt ) ){
+		hd.Query( sptxt, txt ){
 			com = (postcomment)('','','','','','','','','','',0);
 			edit2 = User::Current.uid == txt.uid_author;
 			uid2name[ sptxt.uid_author ] = '';
@@ -49,15 +49,13 @@ routine GetThread( space : User, stid : int, comment = 0, edit=0 )
 			if( sptxt.time_edit ) com.modify = FormatTime( sptxt.time_edit );
 			coms.append( com );
 		}
-		hd.Done();
 	}else{
 		return thd, coms, labs;
 	}
 	hd = web_database.Select( User ).Where().EQ( 'uid' );
 	for( uid in uid2name.keys() ){
-		if( hd.Bind( uid ).Query( user ) ) uid2name[ uid ] = user.username;
+		if( hd.Bind( uid ).QueryOnce( user ) ) uid2name[ uid ] = user.username;
 	}
-	hd.Done()
 	thd.author = uid2name[ (int) thd.uid ];
 	size = coms.size();
 	if( size ){
@@ -117,7 +115,7 @@ routine MakeThread( thd : postthread, comments : list<postcomment>,
 	source = "";
 	edit = dict_lang[ "edit" ];
 	if( current_uid == (int)thd.uid ) thd.edit = edit;
-	if( thd.modify ){
+	if( %thd.modify ){
 		source = topic2.expand( thd, "@" );
 	}else{
 		source = topic1.expand( thd, "@" );

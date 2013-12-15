@@ -139,7 +139,7 @@ routine SdmlParser::Tokenize2( src : string, last=0, end=0 )
 routine SdmlParser::Tokenize()
 {
 #io.writeln( source );
-	tokens = {};
+	tokens = (list<string>) {};
 	Tokenize2( source, 0, source.size()-1 );
 	#io.writeln( tokens.size(), tokens );
 	return 1;
@@ -178,19 +178,19 @@ routine SdmlParser::Parse( src : string )
 		tag0 = tok0.capture( '^ %< %s* (title|article|report|book) %s* %> $' );
 		tag1 = tok1.capture( '^ %< %s* / %s* (title|article|report|book) %s* %> $' );
 		tag2 = tok2.capture( '^ %< %s* / %s* (title|article|report|book) %s* %> $' );
-		if( tag0 ){
+		if( %tag0 ){
 			doctype = tag0[1];
 			that.OpenHeader( doctype );
-			if( tag1.size() && tag1[1] == doctype ){
+			if( %tag1 && tag1[1] == doctype ){
 				start = 2;
 				that.MakeTitle();
-			}else if( tag2.size() && tag2[1] == doctype ){
+			}else if( %tag2 && tag2[1] == doctype ){
 				start = 3;
 				that.MakeTitle( tokens[1] );
-			}else if( tag1 ){
+			}else if( %tag1 ){
 				that.Warn( 'invalid title' );
 				start = 2;
-			}else if( tag2 ){
+			}else if( %tag2 ){
 				that.Warn( 'invalid title' );
 				start = 3;
 			}
@@ -198,7 +198,7 @@ routine SdmlParser::Parse( src : string )
 			that.OpenHeader();
 		}
 		that.CloseHeader();
-		while( tokens[start].pfind( '^ %s+ $' ) ) if( (++ start) >= size ) break;
+		while( %tokens[start].pfind( '^ %s+ $' ) ) if( (++ start) >= size ) break;
 
 		if( start < size && tokens[start] == '<author>' ){
 			if( size == start+1 ){
@@ -274,7 +274,7 @@ routine SdmlParser::ParseSection( sect : TextSection, start : int, end : int )
 	while( start <= end && tokens[start] == '\n' ) start += 1;
 	for( i = start : end ){
 		tk = tokens[i];
-		if( tk.pfind( '^ %< =+ %> $' ) ){
+		if( %tk.pfind( '^ %< =+ %> $' ) ){
 			if( tk.size() > 20 ){
 				end = i-1;
 				break;
@@ -294,11 +294,11 @@ routine SdmlParser::ParseSection( sect : TextSection, start : int, end : int )
 		numbering = sect.numbering;
 		if( numbering.size() ) numbering += '.';
 		numbering += (string)(i+1);
-		subsect = TextSection{ numbering => numbering, sectmark=>tokens[sectpos[i]] };
+		subsect = TextSection::{ numbering => numbering, sectmark=>tokens[sectpos[i]] };
 		sect.subsections.append( subsect );
 		k = 0;
 		for( k = sectpos[i]+1 : sectpos[i+1] ){
-			if( tokens[k].pfind( '^ %< / (=+) %> $' )  ) break;
+			if( %tokens[k].pfind( '^ %< / (=+) %> $' )  ) break;
 		}
 		if( sect.level == top_level ){
 			subsect.level = sect.level + 1;
@@ -358,7 +358,7 @@ routine SdmlParser::ParseBlock( sect : TextSection, start : int, end : int, top=
 		plain += src + ' ';
 		hlcode += Replace2( tokens[start] );
 		tks2 = src.extract( '([%w%p]+ | %s | %n+)', $both );
-		tks = {};
+		tks = (list<string>){};
 		for( tk in tks2 ){
 			if( tk.size() > 40 ){
 				tks3 = tk.split();
@@ -438,7 +438,7 @@ routine SdmlParser::ParseBlock( sect : TextSection, start : int, end : int, top=
 				hlcode += Replace2( tk + tokens[i+1] + tokens[i+2] );
 				tk = tokens[i+1];
 				that.MakeImage( tk );
-				if( tk.pfind( '^ %w+ $' ) ) plain += tk;
+				if( %tk.pfind( '^ %w+ $' ) ) plain += tk;
 				i += 2;
 			}else if( tokens[i+1] == "</image>" ){
 				hlcode += Replace2( tk + tokens[i+1] );
@@ -483,7 +483,7 @@ routine SdmlParser::ParseBlock( sect : TextSection, start : int, end : int, top=
 			name = tk[ 6 : tk.size()-2 ];
 			name.trim();
 			code = quotebegin;
-			if( name ) code += quotename1 + name + quotename2;
+			if( %name ) code += quotename1 + name + quotename2;
 			output += code;
 			hlcode += code;
 			j = 0;
@@ -548,7 +548,7 @@ routine SdmlParser::ParseList( src : string )
 
 			tks = it.capture( '^ %s* ( %b[] ) ( %s* ) ( .* $ )' );
 			output += listitem[0];
-			if( tks ){
+			if( %tks ){
 				name = tks[1];
 				name = name[1:name.size()-2]
 				output += that.MakeItemName( parser.Parse( name ) );
@@ -586,7 +586,7 @@ routine SdmlParser::ParseTable( src : string )
 	length = 0;
 	line = lines[0];
 	line.change( '^ %s+', '' );
-	if( ( j := line.find( "^" ) ) >=0 ){
+	if( j = line.find( "^" ); j >=0 ){
 		line.change( '^ %s* %^', '' );
 		line.change( ' %^ %s* $', '' );
 		toks = line.split( "^" );

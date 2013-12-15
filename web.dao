@@ -60,7 +60,7 @@ if( caps.size() and not nonwikis.has( caps[2] ) ) uri = caps[1] + '_' + language
 
 # document_en_1.1
 caps = uri.capture( '^ / (%w+) ( $ | / (%w+) ($ | / | / ([.%w]+) ( $ | / ([.%w]*) ) ) )' )
-if( caps ){
+if( %caps ){
 	if( caps[1] == 'space' ){
 		caps.pop( $front )
 		caps.pop( $front )

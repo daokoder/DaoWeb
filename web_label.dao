@@ -4,10 +4,10 @@ load web_data
 
 routine GetLabels( space : int )
 {
-	label = Label{};
+	label = Label::{};
 	labels : list<label_t> = {};
 	hd = web_database.Select( Label ).Where().EQ( 'uid', space );
-	while( hd.Query( label ) ) labels.append( label.AsTuple() );
+	hd.Query( label ){ labels.append( label.AsTuple() ); }
 	return labels;
 }
 
@@ -15,11 +15,11 @@ routine GetTextLabel( tid, all : list<label_t> = {} ) => list<label_t>
 {
 	labs : list<label_t> = {};
 	kvlab : map<int,int> = {=>};
-	txtlab = TextLabeling{};
-	label = Label{};
+	txtlab = TextLabeling::{};
+	label = Label::{};
 	hd = web_database.Select( TextLabeling, Label ).Where()
 		.EQ( TextLabeling, 'tid', tid ).Match( TextLabeling, Label, 'lid' );
-	while( hd.Query( txtlab, label ) ){
+	hd.Query( txtlab, label ){
 		labs.append( label.AsTuple() );
 		kvlab[ label.lid ] = 1;
 	}

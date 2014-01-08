@@ -46,7 +46,7 @@ routine GetTextStat( user : User, year = 0, month = 0, day = 0 )
 		for( i = signup.year : now.year ){
 			stat.blog_count = 0;
 			stat.post_count = 0;
-			hd.Bind( i * 10000 ).Query( stat );
+			hd.Bind( i * 10000 ).QueryOnce( stat );
 			blog_counts.append( stat.blog_count );
 			post_counts.append( stat.post_count );
 		}

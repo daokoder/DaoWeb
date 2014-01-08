@@ -23,7 +23,6 @@ routine GetTextLabel( tid, all : list<label_t> = {} ) => list<label_t>
 		labs.append( label.AsTuple() );
 		kvlab[ label.lid ] = 1;
 	}
-	hd.Done();
 	for( lab in all ) if( kvlab.has( lab.lid ) ) lab.checked = 'checked';
 	return labs;
 }

@@ -4,7 +4,7 @@ load xxtea
 
 global space_owner : User;
 
-if( space_owner == User::default ){
+if( space_owner == none ){
 	host = '';
 	if( HTTP_ENV.has( 'HTTP_HOST' ) ) host = HTTP_ENV[ 'HTTP_HOST' ];
 	space_owner = User::{};
@@ -33,7 +33,7 @@ if( space_owner == User::default ){
 	if( country != '' ) space_owner.country = country;
 }
 
-if( User::Current == User::default ){
+if( User::Current == none ){
 	cookie = User::Identify( HTTP_COOKIE.has( 'USER' ) ? HTTP_COOKIE[ 'USER' ] : '' );
 }
 
@@ -46,7 +46,7 @@ static routine User::Identify( cookie ='' )
 	User::Cookie = cookie;
 	setcookie = '';
 
-	if( Super == User::default ){
+	if( Super == none ){
 		Super = User::{};
 		Current = User::{};
 		handle = web_database.Select( User ).Where().EQ( "username" ).Bind( WEB_SPACE );

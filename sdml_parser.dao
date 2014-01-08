@@ -6,7 +6,6 @@ Date: 2008-12-20
 #}
 
 load string.tokenize;
-load web_common
 
 
 interface SdmlCodeHL
@@ -521,7 +520,7 @@ routine SdmlParser::ParseCode( src : string, lang : string )
 }
 routine SdmlParser::ParseList( src : string )
 {
-	parser = that.New();
+	parser = (SdmlParser) that.New();
 	parser.suffix = suffix;
 	parser.makesuffix = 0;
 	parser.makeheader = 0;

@@ -53,25 +53,23 @@ static routine User::Identify( cookie ='' )
 		handle.QueryOnce( Super );
 	}
 	Status = USER_NOT_LOGIN;
+	User::Current.uid = 0;
+	User::Current.username = '';
 
+	time = sys::time();
 	online = Online::{};
 	handle = web_database.Select( User, Online ).Where().EQ( Online, "cookie" )
+		.GT( Online, "time_active", time - 3600 )
 		.Match( User, Online, "uid" ).Bind( cookie );
 
 	handle.Query( Current, online ){
-		User::Status = USER_WAS_LOGIN;
-		time = sys::time();
-		if( ( time - online.time_active ) < 3600 ){
-			User::Status = USER_IS_LOGIN;
-			handle2 = web_database.Update( Online ).Set( "time_active", time ).Where().EQ( "uid", Current.uid );
-			handle2.QueryOnce();
-			setcookie = "Set-Cookie: USER=" + HTTP_COOKIE["USER"] 
-				+ ";expires=" + cookie_time_2h + '; path=/ \n';
-			break;
-		}else{
-			User::Current.uid = 0;
-			User::Current.username = '';
-		}
+		User::Status = USER_IS_LOGIN;
+		setcookie = "Set-Cookie: USER=" + HTTP_COOKIE["USER"] 
+			+ ";expires=" + cookie_time_2h + '; path=/ \n';
+	}
+	if( User::Status == USER_IS_LOGIN ){
+		handle2 = web_database.Update( Online ).Set( "time_active", time ).Where().EQ( "uid", Current.uid );
+		handle2.QueryOnce();
 	}
 	return setcookie;
 }
@@ -80,7 +78,7 @@ static routine User::SignUp( name : string, pwd :string, pwd2 :string )
 {
 	errormsg = "";
 
-	substr = name.match( '%a%w*' ).substring;
+	substr = name.fetch( '%a%w*' );
 	if( name.size()>50 || pwd.size()>50 ){
 		errormsg = dict_lang["username_long"];
 	}else if( name.size() == 0 || substr != name ){
@@ -95,7 +93,7 @@ static routine User::SignUp( name : string, pwd :string, pwd2 :string )
 	}
 
 	if( errormsg.size() == 0 ){
-		pwd = pwd.encrypt( WEB_PWD_KEY, $hex );
+		pwd = encrypt( pwd, WEB_PWD_KEY, $hex );
 		time = sys::time();
 		user = User::{ username => name, password => pwd, time_signup => time };
 		web_database.Insert( user );
@@ -114,11 +112,11 @@ static routine User::Login( name : string, pwd : string )
 	Cookie = cookie;
 
 	errormsg = "";
-	substr = name.match( '%a%w*' ).substring;
+	substr = name.fetch( '%a%w*' );
 	if( name.size() == 0 || substr != name ){
 		errormsg = dict_lang["invalid_username"];
 	}else{
-		pwd = pwd.encrypt( WEB_PWD_KEY, $hex );
+		pwd = encrypt( pwd, WEB_PWD_KEY, $hex );
 		handle = web_database.Select( User ).Where().EQ( "username" ).Bind( name );
 		if( handle.QueryOnce( Current ) ==0 ) errormsg = dict_lang["user_not_exist"];
 		if( Current.password != pwd ){ errormsg = dict_lang["wrong_password"] }

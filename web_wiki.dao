@@ -48,13 +48,12 @@ if( %vnames ){
 	vinfo = dict_lang[ 'other_versions' ] + ':'
 	vname = '';
 	for( vname in vnames ){
-		v = vname.match( '%d[%d%.]*$' );
-		vinfo += item.expand( { 'page'=>vname, 'version'=>v.substring } );
+		vinfo += item.expand( { 'page'=>vname, 'version'=> vname.fetch( '%d[%d%.]*$' ) } );
 	}
 	page = vinfo + '<br/>' + page;
 }else{
 	m = name.match( '_%d[%d%.]*$' );
-	if( m.start >=0 ){
+	if( m != none ){
 		vinfo = dict_lang['not_latest_version_info'] + ': ';
 		vinfo += item.expand( { 'page'=>name[ : m.start-1], 'version'=>dict_lang['current'] } );
 	}

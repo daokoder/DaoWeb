@@ -102,21 +102,20 @@ routine SdmlParser::Tokenize2( src : string, last=0, end=0 )
 	const search = '%<%s* ([%w=]+ |%* |%% |_) (%s* | %s [%s%w]*) %>';
 	m = src.match( search );
 	#io.writeln( m );
-	while( m.start >= 0 ){
+	while( m != none ){
 		start = m.start;
-		tags = m.substring.capture( search );
+		tags = src[m.start:m.end].capture( search );
 		tag = tags[1];
 		if( tag == '*' || tag == '%' ) tag = '%' + tag;
 		p = '%B{ %<%s* (' + tag + ') (%s* | %s [%s%w]*) %> }{ %< %s* / %s* %1 %s*%> }';
 		p2 = '%<%s* (' + tag + ') (%s* | %s [%s%w]*) %> (.*) ( %< %s* / %s* %1 %s*%> )';
-		m2 = src.match( p, start );
-		#io.writeln( tag, start, p, m2, src.extract( p2 ) );
-		if( tag == 'comment' && m2.start >=0 ){
+		m2 = src.match( p, 0, start );
+		if( tag == 'comment' && m2 != none ){
 			last = m2.end + 1;
-		}else if( m2.start >=0 ){
+		}else if( m2 != none ){
 			if( start > last ) tokens.append( src[ last : start-1 ] );
 			tks = src.capture( p2, start, m2.end );
-			tokens.append( m.substring );
+			tokens.append( src[m.start:m.end] );
 			mid = tks[3];
 			switch( tag ){
 				case 'table' , 'list' , 'code' , 'demo' :
@@ -130,7 +129,7 @@ routine SdmlParser::Tokenize2( src : string, last=0, end=0 )
 			if( end >= last ) tokens.append( src[ last : end ] );
 			last = end + 1;
 		}
-		m = src.match( search, last, end );
+		m = src.match( search, 0, last, end );
 		#io.writeln( m, last );
 	}
 	if( end >= last ) tokens.append( src[ last : end ] );
@@ -197,7 +196,7 @@ routine SdmlParser::Parse( src : string )
 			that.OpenHeader();
 		}
 		that.CloseHeader();
-		while( %tokens[start].pfind( '^ %s+ $' ) ) if( (++ start) >= size ) break;
+		while( tokens[start].match( '^ %s+ $' ) != none ) if( (++ start) >= size ) break;
 
 		if( start < size && tokens[start] == '<author>' ){
 			if( size == start+1 ){
@@ -273,7 +272,7 @@ routine SdmlParser::ParseSection( sect : TextSection, start : int, end : int )
 	while( start <= end && tokens[start] == '\n' ) start += 1;
 	for( i = start : end ){
 		tk = tokens[i];
-		if( %tk.pfind( '^ %< =+ %> $' ) ){
+		if( tk.match( '^ %< =+ %> $' ) != none ){
 			if( tk.size() > 20 ){
 				end = i-1;
 				break;
@@ -297,7 +296,7 @@ routine SdmlParser::ParseSection( sect : TextSection, start : int, end : int )
 		sect.subsections.append( subsect );
 		k = 0;
 		for( k = sectpos[i]+1 : sectpos[i+1] ){
-			if( %tokens[k].pfind( '^ %< / (=+) %> $' )  ) break;
+			if( tokens[k].match( '^ %< / (=+) %> $' ) != none ) break;
 		}
 		if( sect.level == top_level ){
 			subsect.level = sect.level + 1;
@@ -316,6 +315,8 @@ routine SdmlParser::ParseSection( sect : TextSection, start : int, end : int )
 		tk = tokens[ sectpos[i] ];
 		if( tk.size() > sectsym.size() )
 			that.Warn( 'invalid section division,' + sectsym + ' -> ' + tk );
+
+		io.writeln( '==========================' )
 		hlcode += "<p><span class=CodeStruct>";
 		for( j = sectpos[i] : k-1 ) hlcode += Replace2( tokens[j] );
 		hlcode += "</span></p>";
@@ -341,7 +342,7 @@ routine SdmlParser::ParseBlock( sect : TextSection, start : int, end : int, top=
 	if( start > end ) return '';
 	if( start == end ){
 		#io.writeln( tokens[start] );
-		tks = tokens[start].tokenize( '\\' );
+		tks = tokenize( tokens[start], '\\' );
 		n = tks.size() - 1;
 		src = '';
 		for( j = 0 : n ){
@@ -437,7 +438,7 @@ routine SdmlParser::ParseBlock( sect : TextSection, start : int, end : int, top=
 				hlcode += Replace2( tk + tokens[i+1] + tokens[i+2] );
 				tk = tokens[i+1];
 				that.MakeImage( tk );
-				if( %tk.pfind( '^ %w+ $' ) ) plain += tk;
+				if( tk.match( '^ %w+ $' ) != none ) plain += tk;
 				i += 2;
 			}else if( tokens[i+1] == "</image>" ){
 				hlcode += Replace2( tk + tokens[i+1] );
@@ -471,7 +472,7 @@ routine SdmlParser::ParseBlock( sect : TextSection, start : int, end : int, top=
 		}else if( tk[:4] == "<code" || tk[:4] == "<demo" ){
 			hlcode += "<div class=hlcode>";
 			hlcode += Replace2( tk + tokens[i+1] + '\n' + tokens[i+2] ) + "</div>";
-			index = tk.match( 'index' ).substring;
+			index = tk.fetch( 'index' );
 			lang = tk[ 6 : tk.size()-2 ];
 			lang.change( 'index', '' );
 			lang.trim();
@@ -518,6 +519,30 @@ routine SdmlParser::ParseCode( src : string, lang : string )
 	src.trim();
 	output += parser.Highlight( src );
 }
+routine SplitListBlock( src : string, marker : string )
+{
+	pt = '%B{ %< %s* ( %w+ ) (| %s+ %w+) %s* %> }{ %< %s* / %s* %1 %s* %> }';
+	items = {''}; # for typing
+	items.clear();
+	remains = '';
+	src.scan( pt ){ [start, end, state]
+		substring = src[start:end];
+		if( state == $matched ){
+			remains += substring;
+			return;
+		}
+		substring.scan( marker ){ [start2, end2, state2]
+			if( state2 == $matched ){
+				if( %remains ) items.append( remains );
+				remains = '';
+			}else{
+				remains += substring[start2:end2];
+			}
+		}
+	}
+	if( %remains ) items.append( remains );
+	return items;
+}
 routine SdmlParser::ParseList( src : string )
 {
 	parser = (SdmlParser) that.New();
@@ -527,20 +552,19 @@ routine SdmlParser::ParseList( src : string )
 	src.trim();
 	tk = src[:1];
 	if( tk == '--' || tk == '==' ){
-		pt = '%B{ %< %s* ( %w+ ) (| %s+ %w+) %s* %> }{ %< %s* / %s* %1 %s* %> }';
-		items = {''}; # for typing
 		tagend = '';
+		items = {''}; # for typing
 		if( tk == '--' ){
-			items = src.extract( '%-%-', $unmatched, (pt, $true) );
+			items = SplitListBlock( src, '%-%-' );
 			output += unorderlist[0];
 			tagend = unorderlist[1];
 		}else{
-			items = src.extract( '==', $unmatched, (pt, $true) );
+			items = SplitListBlock( src, '==' );
 			output += orderlist[0];
 			tagend = orderlist[1];
 		}
 		for( it in items ){
-			if( it.match( '^ %s* $' ).start >= 0 ){
+			if( it.match( '^ %s* $' ) != none ){
 				output += linebreak;
 				skip;
 			}   
@@ -607,7 +631,7 @@ routine SdmlParser::ParseTable( src : string )
 			i += 1;
 			skip;
 		}
-		tkns = line.tokenize( "|", "\"", 1 );
+		tkns = tokenize( line, "|", "\"", 1 );
 		toks = {};
 		for( j = 0 : tkns.size()-1 ){
 			tok = tkns[j];

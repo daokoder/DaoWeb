@@ -36,7 +36,7 @@ if( etype == 'user' ){
 		newpwd1 = HTTP_POST[ 'newpwd1' ];
 		newpwd2 = HTTP_POST[ 'newpwd2' ];
 		if( %oldpwd ){
-			oldpwd = oldpwd.encrypt( WEB_PWD_KEY, $hex );
+			oldpwd = encrypt( oldpwd, WEB_PWD_KEY, $hex );
 			if( oldpwd != space_owner.password ){
 				status = 'wrong_password';
 			}else if( newpwd1.size() < 6 ){
@@ -44,7 +44,7 @@ if( etype == 'user' ){
 			}else if( newpwd1 != newpwd2 ){
 				status = 'password_unmatch';
 			}else{
-				space_owner.password = newpwd1.encrypt( WEB_PWD_KEY, $hex );
+				space_owner.password = encrypt( newpwd1, WEB_PWD_KEY, $hex );
 			}
 		}
 		if( status == '' ){
@@ -88,11 +88,11 @@ if( etype == 'page' ){
 	if( %caps ) name = caps[1]
 	tid = frame(0){ (int) name };
 }
-if( %name.pfind( '%w' ) ) etype = 'page';
+if( name.match( '%w' ) != none ) etype = 'page';
 
 source = GetSource( space_owner.uid, tid, section, label_list );
 reply = GetSource( space_owner.uid, tid_reply );
-name = source[ 'name' ] ? source[ 'name' ] : name;
+name = %source[ 'name' ] ? source[ 'name' ] : name;
 check_blog = source[ 'blog' ] ? 'checked' : '';
 check_forum = source[ 'forum' ] ? 'checked' : '';
 if( tid_reply ){

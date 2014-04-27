@@ -26,11 +26,12 @@ routine GetForumPosts( space : int, page : int, size : int, labs : string )
 			.Match( SpaceText, SpaceText, 'stid', 'stid_first' )
 			.Sort( SpaceText, 'time_order', 1 ).Range( size, page * size );
 		hd.Query( labeling, stxt, atext ){
-			if( unique.has( stxt.tid ) ) skip;
-			unique[ stxt.tid ] = 1;
-			post = ( stxt.tid, atext.title, stxt.uid_author, stxt.time_create, 
-					stxt.uid_commenter, stxt.time_comment, stxt.count_reply, stxt.hit_count );
-			posts.append( post );
+			if( not unique.has( stxt.tid ) ){
+				unique[ stxt.tid ] = 1;
+				post = ( stxt.tid, atext.title, stxt.uid_author, stxt.time_create, 
+						stxt.uid_commenter, stxt.time_comment, stxt.count_reply, stxt.hit_count );
+				posts.append( post );
+			}
 		}
 	}else{
 		hd = web_database.Select( SpaceText, Text ).Where()

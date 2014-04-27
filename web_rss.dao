@@ -61,7 +61,7 @@ routine MakeRSS( space : User, tid = 0, label = '' )
 	link += '&#38;' + rssname;
 	pubdate = GMTime( time_now - 2*month_in_seconds );
 	gmtime = GMTime( sys::time() );
-	kv = { 'pubDate' => pubdate, 'lastBuildDate' => gmtime, 'link' => link };
+	kv = { 'pubDate' => (string)pubdate, 'lastBuildDate' => (string)gmtime, 'link' => (string)link };
 	if( label == 'chinese' ){
 		kv[ 'language' ] = 'zh-cn';
 	}else{

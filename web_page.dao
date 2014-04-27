@@ -143,7 +143,7 @@ routine MakeNews( blogs : list<news_t>, url_base='' )
 	n = blogs.size();
 	while( i < n ){
 		thd = blogs[i];
-		time = thd.time.match( '%d{4}%-%d%d%-%d%d' ).substring;
+		time = thd.time.fetch( '%d{4}%-%d%d%-%d%d' );
 		# minimum news of two dates:
 		if( date1 != '' and date1 != time and date2 != '' and date2 != time ) break;
 		news += '<div style="background-color:#' + (i%2 ? 'ECF2FC' : 'E6ECFA')
@@ -160,7 +160,7 @@ routine MakeNews( blogs : list<news_t>, url_base='' )
 	date3 = '';
 	while( i < n ){
 		thd = blogs[i];
-		thd.time = thd.time.match( '%d{4}%-%d%d%-%d%d' ).substring;
+		thd.time = thd.time.fetch( '%d{4}%-%d%d%-%d%d' );
 		if( date3 !='' and date3 != thd.time ) break;
 		if( i ) news += '<div style="margin-top: 5px">';
 		url = ( url=> url_base + '/thread/' + thd.tid, time=> thd.time, topic=> thd.topic );

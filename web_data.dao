@@ -1,9 +1,9 @@
 
 load web_config;
 load web_common;
-load DaoSQL;
-load DaoSQLite;
-#load DaoMySQL;
+load sql;
+load sqlite;
+#load mysql;
 
 global enum UserStatusType
 {
@@ -344,12 +344,12 @@ static routine TextHit::Update( tid = 0 )
 {
 	var ip = HTTP_ENV[ 'REMOTE_ADDR' ];
 	var agent = frame(''){ HTTP_ENV[ 'HTTP_USER_AGENT' ] };
-	if( %agent.pfind( '<I>( bot | spider)' ) ){
-		agent = agent.match( '%w+ %s* <I>( bot | spider)' ).substring;
-	}else if( %agent.pfind( '<I> yahoo' ) ){
-		agent = agent.match( '<I>( yahoo %s* %! %s* slurp' ).substring;
+	if( agent.match( '<I>( bot | spider)' ) != none ){
+		agent = agent.fetch( '%w+ %s* <I>( bot | spider)' );
+	}else if( agent.match( '<I> yahoo' ) != none ){
+		agent = agent.fetch( '<I>( yahoo %s* %! %s* slurp' );
 	}else{
-		agent = agent.match( '%w+ %s* / %s* %d+ (|%.%d+)' ).substring;
+		agent = agent.fetch( '%w+ %s* / %s* %d+ (|%.%d+)' );
 	}
 	hd = web_database.Select( TextHit ).Where().EQ( 'tid', tid ).EQ( 'ip', ip );
 	hit = TextHit::{ tid=>tid, time=>time_now, count=>1, agent=>agent, ip=>ip };

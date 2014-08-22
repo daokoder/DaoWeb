@@ -5,32 +5,29 @@ load sql;
 load sqlite;
 #load mysql;
 
-global enum UserStatusType
+enum UserStatusType
 {
 	USER_NOT_LOGIN,
 	USER_WAS_LOGIN,
 	USER_IS_LOGIN
 };
 
-# global permission:
-global enum UserType
+# var permission:
+enum UserType
 { 
-	USER_ADMIN ,   # global administrator.
+	USER_ADMIN ,   # var administrator.
 	USER_NORMAL ,  # normal users.
 	USER_LIMITED , # users that can only post at his own space.
 	USER_EXILED    # users that can post at nowhere.
 };
 
-global enum UserRoleType
+enum UserRoleType
 {
 	ROLE_NONE ,
 	ROLE_FRIEND ,
 	ROLE_ADMIN 
 };
 
-use enum UserStatusType
-use enum UserRoleType
-use enum UserType
 
 class Space
 {
@@ -40,7 +37,7 @@ class Space
 class User
 {
 	var  uid         : INT_PRIMARY_KEY_AUTO_INCREMENT;
-	var  status      : INT = USER_NORMAL;
+	var  status      : INT = $USER_NORMAL;
 	var  text_count  : INT = 0;
 	var  space_text  : INT = 0;
 	var  time_signup : INT = 0;
@@ -53,7 +50,7 @@ class User
 	static  Current  : User;
 
 	static  Cookie = ""; # for current user
-	static  Status = USER_NOT_LOGIN; # for current user
+	static  Status = UserStatusType::USER_NOT_LOGIN; # for current user
 
 	static routine Identify( cookie ='' );
 	static routine SignUp( name : string, pwd : string, pwd2 : string );
@@ -164,7 +161,7 @@ class Text
 	const  title_index = 10;
 	const  brief_index = 11;
 
-	var  tid         : INT_PRIMARY_KEY_AUTO_INCREMENT; # global text id
+	var  tid         : INT_PRIMARY_KEY_AUTO_INCREMENT; # var text id
 	var  stid        : INT = 0;
 	var  uid_space   : INT = 0; # the space owner where the text is posted
 	var  uid_author  : INT = 0; # the author of the text
@@ -302,10 +299,10 @@ class Image
 };
 
 
-global web_database
+var web_database
 
-frame {
-	defer { if( %recover() ) sys::exit(0) }
+std.exec {
+	defer( any ) { sys::exit(0) }
 	web_database = 
 		#SQLDatabase<MySQL>( WEB_DB_NAME, WEB_DB_HOST, WEB_DB_USER, WEB_DB_PWD )
 		SQLDatabase<SQLite>( WEB_SQLITE_DB )
@@ -322,7 +319,7 @@ static routine TextStat::Update( space : int, time : int, blog=0, post=0 )
 	tm[1] = ctime.year * 10000;
 	tm[2] = tm[1] + ctime.month * 100;
 	tm[3] = tm[2] + ctime.day;
-	stat = TextStat::{ suid => space };
+	stat = TextStat.{ suid = space };
 	hd1 = web_database.Select( TextStat ).Where().EQ( 'time_range' ).EQ( 'suid', space );
 	hd2 = web_database.Update( TextStat ).Add( 'blog_count', blog )
 		.Add( 'post_count', post ).Where().EQ( 'time_range' ).EQ( 'suid', space );
@@ -343,7 +340,7 @@ static routine TextStat::Update( space : int, time : int, blog=0, post=0 )
 static routine TextHit::Update( tid = 0 )
 {
 	var ip = HTTP_ENV[ 'REMOTE_ADDR' ];
-	var agent = frame(''){ HTTP_ENV[ 'HTTP_USER_AGENT' ] };
+	var agent = std.exec(''){ HTTP_ENV[ 'HTTP_USER_AGENT' ] };
 	if( agent.match( '<I>( bot | spider)' ) != none ){
 		agent = agent.fetch( '%w+ %s* <I>( bot | spider)' );
 	}else if( agent.match( '<I> yahoo' ) != none ){
@@ -352,7 +349,7 @@ static routine TextHit::Update( tid = 0 )
 		agent = agent.fetch( '%w+ %s* / %s* %d+ (|%.%d+)' );
 	}
 	hd = web_database.Select( TextHit ).Where().EQ( 'tid', tid ).EQ( 'ip', ip );
-	hit = TextHit::{ tid=>tid, time=>time_now, count=>1, agent=>agent, ip=>ip };
+	hit = TextHit.{ tid = tid, time = time_now, count = 1, agent = agent, ip = ip };
 	add = 1;
 	if( hd.QueryOnce( hit ) ){
 		if( time_now < hit.time + 3600 ) add = 0;
@@ -381,7 +378,7 @@ routine VisitStat::Update( suid : int, stid : int, cid : int, time : int )
 	tm[1] = ctime.year * 10000;
 	tm[2] = tm[1] + ctime.month * 100;
 	tm[3] = tm[2] + ctime.day;
-	stat = VisitStat::{ suid => suid, cid => cid };
+	stat = VisitStat.{ suid = suid, cid = cid };
 	hd1 = web_database.Select( VisitStat ).Where().EQ( 'time_range' ).EQ( 'suid', suid ).EQ( 'stid' ).EQ( 'cid', cid );
 	hd2 = web_database.Update( VisitStat ).Add( 'count', 1 ).Where().EQ( 'time_range' ).EQ( 'suid', suid ).EQ( 'stid' ).EQ( 'cid', cid );
 	for( tid in tids ){

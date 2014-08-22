@@ -4,8 +4,8 @@ load web_page
 
 io.writeln( 'content-type: text/html\n\n' );
 
-edit = User::Current.uid == space_owner.uid or WEB_ADMINS.has( User::Current.username )
-admin = WEB_ADMINS.has( User::Current.username )
+edit = User::Current.uid == space_owner.uid or WEB_ADMINS.find( User::Current.username ) != none
+admin = WEB_ADMINS.find( User::Current.username ) != none
 
 tpl =
 @[html]

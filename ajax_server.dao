@@ -2,8 +2,8 @@
 load web.cgi;
 
 action = '';
-if( HTTP_GET.has( 'ajax' )  ) action = (string) HTTP_GET[ 'ajax' ];
-if( HTTP_POST.has( 'ajax' )  ) action = (string) HTTP_POST[ 'ajax' ];
+if( HTTP_GET.find( 'ajax' ) != none  ) action = (string) HTTP_GET[ 'ajax' ];
+if( HTTP_POST.find( 'ajax' ) != none  ) action = (string) HTTP_POST[ 'ajax' ];
 
 #io::stderr.writeln( 'action', action, HTTP_GET, HTTP_POST )
 

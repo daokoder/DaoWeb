@@ -4,6 +4,8 @@ load math
 load web_lang;
 load web_config;
 
+type tupkey_t = tuple<...:string>
+
 type dict = map<string,string>
 type listst = list<tuple<string,string,string> >
 
@@ -34,36 +36,36 @@ const date_keys = {
 format = "%W,%D-%M-%Y %H:%I:%S GMT";
 time = sys::time();
 
-global cookie_time_0h  = sys::ctimef( time-100, format, date_keys );
-global cookie_time_1h  = sys::ctimef( time+3600, format, date_keys );
-global cookie_time_2h  = sys::ctimef( time+3600*2, format, date_keys );
-global cookie_time_3h  = sys::ctimef( time+3600*3, format, date_keys );
-global cookie_time_6h  = sys::ctimef( time+3600*6, format, date_keys );
-global cookie_time_24h = sys::ctimef( time+3600*24, format, date_keys );
+var cookie_time_0h  = sys::ctimef( time-100, format, date_keys );
+var cookie_time_1h  = sys::ctimef( time+3600, format, date_keys );
+var cookie_time_2h  = sys::ctimef( time+3600*2, format, date_keys );
+var cookie_time_3h  = sys::ctimef( time+3600*3, format, date_keys );
+var cookie_time_6h  = sys::ctimef( time+3600*6, format, date_keys );
+var cookie_time_24h = sys::ctimef( time+3600*24, format, date_keys );
 
 
 const fold_templates = "templates/";
 
-global time_now = sys::time();
-global ctime_now = sys::ctime( time_now );
-global ctimef_now = sys::ctimef( time_now );
+var time_now = sys::time();
+var ctime_now = sys::ctime( time_now );
+var ctimef_now = sys::ctimef( time_now );
 const hour_in_seconds = 60 * 60;
 const day_in_seconds = 24 * hour_in_seconds;
 const week_in_seconds = 7 * day_in_seconds;
 const month_in_seconds = 30 * day_in_seconds;
 const year_in_seconds = 365 * day_in_seconds;
 
-global cookie = "TEST";
-global timezone = 0;
+var cookie = "TEST";
+var timezone = 0;
 
-global userStatus;
-global visitCount;
+var userStatus;
+var visitCount;
 
 srand( sys::time() );
 
-if( HTTP_COOKIE.has( 'TimeZone' ) ) timezone = (int) HTTP_COOKIE[ 'TimeZone' ];
+if( HTTP_COOKIE.find( 'TimeZone' ) != none ) timezone = (int) HTTP_COOKIE[ 'TimeZone' ];
 
-global timezone_seconds = timezone * hour_in_seconds;
+var timezone_seconds = timezone * hour_in_seconds;
 
 routine FormatTime( time =0 )
 {
@@ -93,11 +95,11 @@ routine FormatTime3( time =0 )
 	return sys::ctimef( time, time_format, { "week" => week_days } );
 }
 
-global passed_time_format = '$(c1)$(u1)$(c2)$(u2)';
-global passed_time_format2 = '$(c1)$(u1)';
+var passed_time_format = '$(c1)$(u1)$(c2)$(u2)';
+var passed_time_format2 = '$(c1)$(u1)';
 #if( language == 'zh' ) passed_time_format = '$(c1)$(u1)$(c2)$(u2)';
 
-global time_keys =
+var time_keys =
 {
 	( year_in_seconds, 'year', 'years' ) ,
 	( month_in_seconds, 'month', 'months' ) ,
@@ -135,7 +137,7 @@ routine PassedTime2( time = 0 )
 		k2 = '';
 		s2 = '';
 	}
-	tup = ( c1=>s1, u1=>k1, c2=>s2, u2=>k2 );
+	tup = { "c1" => s1, "u1" => k1, "c2" => s2, "u2" => k2 };
 	return passed_time_format.expand( tup );
 }
 
@@ -155,7 +157,7 @@ routine PassedTime( time =0 )
 	k1 += '<span style="color:#777; margin-left: 2px">' + dict_lang['ago'] + '</span>';
 	s1 = (string)t1;
 	if( i >=6 ) s1 = '';
-	tup = ( c1=>s1, u1=>k1 );
+	tup = { "c1" => s1, "u1" => k1 };
 	return passed_time_format2.expand( tup );
 }
 

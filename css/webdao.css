@@ -350,8 +350,9 @@ TABLE.outputTable {
 }
 .sdmltable {
 	background-color: #F8E8FB;
-	margin-left	: 5%;
-	margin-right   : 5%;
+	width: 95%;
+	margin-left	: 3%;
+	margin-right : 2%;
 	border: 1px solid #CCCCCC;
 }
 .docTableRow {

@@ -12,7 +12,7 @@ routine DeleteLabel( space : int, name : string )
 routine CreateLabel( space : int, name : string )
 {
 	hd = web_database.Select( Label ).Where().EQ( 'uid', space ).EQ( 'name' ).Bind( name );
-	label = Label::{ uid => space, name => name, color => '#0f0' };
+	label = Label.{ uid = space, name = name, color = '#0f0' };
 	if( hd.QueryOnce( label ) ) return 0;
 	web_database.Insert( label );
 	return 1;
@@ -45,7 +45,7 @@ routine ChangeLabelSort( space : int, name : string, sort : int )
 }
 
 
-httpdata = HTTP_GET.has( 'space_id' ) ? HTTP_GET : HTTP_POST;
+httpdata = HTTP_GET.find( 'space_id' ) != none ? HTTP_GET : HTTP_POST;
 
 
 io.writeln( 'content-type: text/html\n' );
@@ -55,19 +55,19 @@ if( User::Current.uid ==0 ) return
 
 space = (int) httpdata[ 'space_id' ];
 
-if( httpdata.has( 'create' ) ){
+if( httpdata.find( 'create' ) != none ){
 	if( CreateLabel( space, httpdata[ 'create' ] ) ==0 ){
 		io.writeln( 'label:', httpdata[ 'create' ], 'alread exists.' );
 	}
-}else if( httpdata.has( 'delete' ) ){
+}else if( httpdata.find( 'delete' ) != none ){
 	DeleteLabel( space, httpdata[ 'delete' ] );
-}else if( httpdata.has( 'label' ) && httpdata.has( 'color' ) ){
+}else if( httpdata.find( 'label' ) != none && httpdata.find( 'color' ) != none ){
 	ChangeLabelColor( space, httpdata['label'], httpdata[ 'color' ] );
-}else if( httpdata.has( 'label' ) && httpdata.has( 'name' ) ){
+}else if( httpdata.find( 'label' ) != none && httpdata.find( 'name' ) != none ){
 	ChangeLabelName( space, httpdata['label'], httpdata[ 'name' ] );
-}else if( httpdata.has( 'label' ) && httpdata.has( 'row' ) ){
+}else if( httpdata.find( 'label' ) != none && httpdata.find( 'row' ) != none ){
 	ChangeLabelRow( space, httpdata['label'], (int)httpdata[ 'row' ] );
-}else if( httpdata.has( 'label' ) && httpdata.has( 'sort' ) ){
+}else if( httpdata.find( 'label' ) != none && httpdata.find( 'sort' ) != none ){
 	ChangeLabelSort( space, httpdata['label'], (int)httpdata[ 'sort' ] );
 }
 

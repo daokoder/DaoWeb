@@ -29,7 +29,7 @@ status:
 #}
 
 status = '0';
-if( msg ) status = '4';
+if( %msg ) status = '4';
 
 user = 
 {

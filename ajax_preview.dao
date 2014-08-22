@@ -5,7 +5,7 @@ load sdml_html;
 io.writeln( 'content-type: text/html\n\n' );
 
 source = '';
-if( HTTP_POST.has( 'source' ) ) source += HTTP_POST['source'];
+if( HTTP_POST.find( 'source' ) != none ) source += HTTP_POST['source'];
 
 parser = Sdml2Html();
 html = parser.Parse( source );

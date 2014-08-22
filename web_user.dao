@@ -2,15 +2,15 @@
 load web_data
 load xxtea
 
-global space_owner : User;
+var space_owner : User;
 
 if( space_owner == none ){
 	host = '';
-	if( HTTP_ENV.has( 'HTTP_HOST' ) ) host = HTTP_ENV[ 'HTTP_HOST' ];
-	space_owner = User::{};
-	if( HTTP_GET.has( 'space' ) ){
+	if( HTTP_ENV.find( 'HTTP_HOST' ) != none ) host = HTTP_ENV[ 'HTTP_HOST' ];
+	space_owner = User.{};
+	if( HTTP_GET.find( 'space' ) != none ){
 		space_owner.username = HTTP_GET[ 'space' ];
-	}else if( HTTP_POST.has( 'space' ) ){
+	}else if( HTTP_POST.find( 'space' ) != none ){
 		space_owner.username = HTTP_POST[ 'space' ];
 	}else{
 		space_owner.username = WEB_SPACE;
@@ -34,7 +34,7 @@ if( space_owner == none ){
 }
 
 if( User::Current == none ){
-	cookie = User::Identify( HTTP_COOKIE.has( 'USER' ) ? HTTP_COOKIE[ 'USER' ] : '' );
+	cookie = User::Identify( HTTP_COOKIE.find( 'USER' ) != none ? HTTP_COOKIE[ 'USER' ] : '' );
 }
 
 
@@ -47,27 +47,27 @@ static routine User::Identify( cookie ='' )
 	setcookie = '';
 
 	if( Super == none ){
-		Super = User::{};
-		Current = User::{};
+		Super = User.{};
+		Current = User.{};
 		handle = web_database.Select( User ).Where().EQ( "username" ).Bind( WEB_SPACE );
 		handle.QueryOnce( Super );
 	}
-	Status = USER_NOT_LOGIN;
+	Status = $USER_NOT_LOGIN;
 	User::Current.uid = 0;
 	User::Current.username = '';
 
 	time = sys::time();
-	online = Online::{};
+	online = Online.{};
 	handle = web_database.Select( User, Online ).Where().EQ( Online, "cookie" )
 		.GT( Online, "time_active", time - 3600 )
 		.Match( User, Online, "uid" ).Bind( cookie );
 
 	handle.Query( Current, online ){
-		User::Status = USER_IS_LOGIN;
+		User::Status = $USER_IS_LOGIN;
 		setcookie = "Set-Cookie: USER=" + HTTP_COOKIE["USER"] 
 			+ ";expires=" + cookie_time_2h + '; path=/ \n';
 	}
-	if( User::Status == USER_IS_LOGIN ){
+	if( User::Status == $USER_IS_LOGIN ){
 		handle2 = web_database.Update( Online ).Set( "time_active", time ).Where().EQ( "uid", Current.uid );
 		handle2.QueryOnce();
 	}
@@ -93,9 +93,9 @@ static routine User::SignUp( name : string, pwd :string, pwd2 :string )
 	}
 
 	if( errormsg.size() == 0 ){
-		pwd = encrypt( pwd, WEB_PWD_KEY, $hex );
+		pwd = xxtea::encrypt( pwd, WEB_PWD_KEY, $hex );
 		time = sys::time();
-		user = User::{ username => name, password => pwd, time_signup => time };
+		user = User.{ username = name, password = pwd, time_signup = time };
 		web_database.Insert( user );
 #{ not needed anymore; use url rewriting instead
 		MakeFolds( name );
@@ -106,7 +106,7 @@ static routine User::SignUp( name : string, pwd :string, pwd2 :string )
 
 static routine User::Login( name : string, pwd : string )
 {
-	addr = HTTP_ENV.has( "REMOTE_ADDR" ) ? HTTP_ENV["REMOTE_ADDR"] : "";
+	addr = HTTP_ENV.find( "REMOTE_ADDR" ) != none ? HTTP_ENV["REMOTE_ADDR"] : "";
 	cookie = addr + sys::ctimef(0,"%Y%M%D%H%I%S");
 	cookie += random_string( 50 - cookie.size() );
 	Cookie = cookie;
@@ -116,7 +116,7 @@ static routine User::Login( name : string, pwd : string )
 	if( name.size() == 0 || substr != name ){
 		errormsg = dict_lang["invalid_username"];
 	}else{
-		pwd = encrypt( pwd, WEB_PWD_KEY, $hex );
+		pwd = xxtea::encrypt( pwd, WEB_PWD_KEY, $hex );
 		handle = web_database.Select( User ).Where().EQ( "username" ).Bind( name );
 		if( handle.QueryOnce( Current ) ==0 ) errormsg = dict_lang["user_not_exist"];
 		if( Current.password != pwd ){ errormsg = dict_lang["wrong_password"] }
@@ -124,7 +124,7 @@ static routine User::Login( name : string, pwd : string )
 	if( errormsg.size() ) return errormsg;
 
 	tm = sys::time();
-	online = Online::{ uid=> Current.uid, time_login=> tm, time_active=> tm, cookie=> cookie};
+	online = Online.{ uid = Current.uid, time_login = tm, time_active = tm, cookie = cookie};
 	handle = web_database.Select( Online ).Where().EQ( "uid", Current.uid );
 	if( handle.QueryOnce( online ) ==0 ) web_database.Insert( online );
 	handle = web_database.Update( Online ).Set( "cookie" ).Set( "time_login", tm )

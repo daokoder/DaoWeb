@@ -5,7 +5,7 @@ load web_user
 routine GetNewsTitles( space : User )
 {
 	lid = -1;
-	lab = Label::{};
+	lab = Label.{};
 	hd = web_database.Select( Label ).Where().EQ( 'uid', space.uid ).EQ( 'name' )
 	if( hd.Bind( 'news' ).QueryOnce( lab ) ) lid = lab.lid
 	member = Text::title_index;
@@ -19,9 +19,9 @@ routine GetNewsTitles( space : User )
 		.Sort( SpaceText, 'time_create', 1 ).Range( 10 );
 	#stdio.println( hd.sqlstring() );
 	news : list<news_t> = {};
-	txt = Text::{};
-	sptxt = SpaceText::{};
-	tlab = TextLabeling::{};
+	txt = Text.{};
+	sptxt = SpaceText.{};
+	tlab = TextLabeling.{};
 	hd.Query( tlab, sptxt, txt ){
 		thd = (news_t)('','','');
 		thd.tid = (string) sptxt.stid;
@@ -34,7 +34,7 @@ routine GetNewsTitles( space : User )
 
 routine GetTextStat( user : User, year = 0, month = 0, day = 0 )
 {
-	stat = TextStat::{};
+	stat = TextStat.{};
 	signup = sys::ctime( user.time_signup )
 	now = sys::ctime();
 	blog_counts : list<int> = {};
@@ -80,9 +80,9 @@ routine GetTextStat( user : User, year = 0, month = 0, day = 0 )
 routine GetLatestText( owner : User, blog_com_post=1 ) => list<recent_text>
 {
 	texts : list<recent_text> = {};
-	user = User::{};
-	atext = Text::{};
-	sptext = SpaceText::{};
+	user = User.{};
+	atext = Text.{};
+	sptext = SpaceText.{};
 	time = time_now - month_in_seconds;
 	hd = web_database.Select( SpaceText, Text, 11, User ).Where()
 		.EQ( SpaceText, 'uid_space', owner.uid );
@@ -101,7 +101,7 @@ routine GetLatestText( owner : User, blog_com_post=1 ) => list<recent_text>
 		texts.append( (recent_text)(sptext.stid_first, sptext.stid, sptext.time_create,
 					user.username, atext.title, atext.brief));
 #}
-		texts.append( recent_text::{ sptext.stid_first, sptext.stid, sptext.time_create,
+		texts.append( recent_text.{ sptext.stid_first, sptext.stid, sptext.time_create,
 					user.username, atext.title, atext.brief } );
 	}
 	return texts;
@@ -140,8 +140,8 @@ routine GetPage( space : User, name : string, edit=0 )
 	hd = web_database.Select( SpaceText, Text ).Where()
 		.EQ( SpaceText, 'uid_space', space.uid ).EQ( SpaceText, 'name' )
 		.Match( SpaceText, Text, 'tid' ).Bind( name );
-	txt = Text::{};
-	sptxt = SpaceText::{};
+	txt = Text.{};
+	sptxt = SpaceText.{};
 	page = dict_lang[ 'page_under_construction' ];
 	if( hd.QueryOnce( sptxt, txt ) == 0 ) return 0, page, '<h2>' + page + '</h2>', 0,0,0,0;
 	TextHit::Update( txt.tid );
@@ -152,7 +152,7 @@ routine GetPage( space : User, name : string, edit=0 )
 routine GetVersion( tid : int )
 {
 	hd = web_database.Select( TextVersion ).Where().EQ( 'tid', tid );
-	tv = TextVersion::{};
+	tv = TextVersion.{};
 	vnames = {};
 	hd.Query( tv ){ vnames.append( tv.vname ); }
 	return vnames;
@@ -165,8 +165,8 @@ routine GetSource( space : int, stid : int, section='', labels : list<label_t> =
 	hd = web_database.Select( SpaceText, Text ).Where()
 		.EQ( SpaceText, 'uid_space', space ).EQ( SpaceText, 'stid', stid )
 		.Match( SpaceText, Text, 'tid' );
-	sptxt = SpaceText::{};
-	txt = Text::{};
+	sptxt = SpaceText.{};
+	txt = Text.{};
 	hd.QueryOnce( sptxt, txt );
 	source = txt.source;
 	#{
@@ -178,7 +178,7 @@ routine GetSource( space : int, stid : int, section='', labels : list<label_t> =
 	}
 	#}
 	if( labels.size() ){
-		txtlab = TextLabeling::{};
+		txtlab = TextLabeling.{};
 		hd = web_database.Select( TextLabeling ).Where().EQ( 'tid', sptxt.tid ).EQ( 'lid' );
 		for( lab in labels ){
 			if( hd.Bind( lab.lid ).QueryOnce( txtlab ) ) lab.checked = 'checked';

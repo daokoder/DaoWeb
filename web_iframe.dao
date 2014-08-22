@@ -3,7 +3,7 @@ load web_page
 
 io.writeln( 'content-type: text/html\n\n' );
 
-uri = HTTP_ENV.has( 'REQUEST_URI' ) ? HTTP_ENV[ 'REQUEST_URI' ] : '/';
+uri = HTTP_ENV.find( 'REQUEST_URI' ) != none ? HTTP_ENV[ 'REQUEST_URI' ] : '/';
 caps = uri.capture( '^ / (%w+) ($|/ (.*) )' );
 
 tmp = 

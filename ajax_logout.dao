@@ -5,5 +5,5 @@ io.writeln( "content-type: text/plain\n" );
 
 if( User::Current.uid ==0 ) return
 
-User::Identify( HTTP_COOKIE.has( 'USER' ) ? HTTP_COOKIE[ 'USER' ] : '' );
+User::Identify( HTTP_COOKIE.find( 'USER' ) != none ? HTTP_COOKIE[ 'USER' ] : '' );
 User::Logout();

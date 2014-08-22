@@ -4,7 +4,7 @@ load web_data
 
 routine GetLabels( space : int )
 {
-	label = Label::{};
+	label = Label.{};
 	labels : list<label_t> = {};
 	hd = web_database.Select( Label ).Where().EQ( 'uid', space );
 	hd.Query( label ){ labels.append( label.AsTuple() ); }
@@ -15,15 +15,15 @@ routine GetTextLabel( tid, all : list<label_t> = {} ) => list<label_t>
 {
 	labs : list<label_t> = {};
 	kvlab : map<int,int> = {=>};
-	txtlab = TextLabeling::{};
-	label = Label::{};
+	txtlab = TextLabeling.{};
+	label = Label.{};
 	hd = web_database.Select( TextLabeling, Label ).Where()
 		.EQ( TextLabeling, 'tid', tid ).Match( TextLabeling, Label, 'lid' );
 	hd.Query( txtlab, label ){
 		labs.append( label.AsTuple() );
 		kvlab[ label.lid ] = 1;
 	}
-	for( lab in all ) if( kvlab.has( lab.lid ) ) lab.checked = 'checked';
+	for( lab in all ) if( kvlab.find( lab.lid ) != none ) lab.checked = 'checked';
 	return labs;
 }
 
@@ -38,7 +38,7 @@ routine ViewLabels( labels : list<label_t> )
 	labcode = '';
 	options0 = {'0'=>'0', '1'=>'1', '2'=>'2', '3'=>'3', '4'=>'4', '5'=>'5'};
 	for( label in labels ){
-		labcode2 = labtemp.expand( label, '@' );
+		labcode2 = labtemp.expand( (tuple<...:string>)label, '@' );
 		options = options0[:];
 		row = (string)label.row;
 		options[ row ] = row + '" selected="selected';

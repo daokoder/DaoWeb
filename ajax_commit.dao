@@ -17,13 +17,13 @@ const failed = '{ "status" : "failed", "data" : "$(info)" }';
 space = HTTP_POST['space'];
 title = HTTP_POST['title'];
 source = HTTP_POST['source'];
-blog = HTTP_POST.has( 'blog' );
-forum = HTTP_POST.has( 'forum' );
-name = HTTP_POST.has( 'name' ) ? HTTP_POST['name'] : '';
-labels = HTTP_POST.has( 'labels' ) ? HTTP_POST['labels'] : '';
-edit = HTTP_POST.has( 'edit' ) ? (int) HTTP_POST['edit'] : 0;
-reply = HTTP_POST.has( 'reply' ) ? (int) HTTP_POST['reply'] : 0;
-section = HTTP_POST.has( 'section' ) ? HTTP_POST['section'] : '';
+blog = HTTP_POST.find( 'blog' ) != none;
+forum = HTTP_POST.find( 'forum' ) != none;
+name = HTTP_POST.find( 'name' ) != none ? HTTP_POST['name'] : '';
+labels = HTTP_POST.find( 'labels' ) != none ? HTTP_POST['labels'] : '';
+edit = HTTP_POST.find( 'edit' ) != none ? (int) HTTP_POST['edit'] : 0;
+reply = HTTP_POST.find( 'reply' ) != none ? (int) HTTP_POST['reply'] : 0;
+section = HTTP_POST.find( 'section' ) != none ? HTTP_POST['section'] : '';
 
 if( reply ==0 && title.size() ==0 && name.size() ==0 ){
 	io.writeln( failed.expand( { 'info' => 'Empty title/name' } ) );
@@ -35,9 +35,7 @@ if( reply ==0 && title.size() ==0 && name.size() ==0 ){
 
 
 parser = Sdml2Html();
-defer {
-	if( 0 == %recover() ) return
-
+defer(any) {
 	wiki = CompleteText( 2, parser.output, "", 0 ) + '<br clear=all>';
 	s = failed.expand( { 'info' => 'Failed to submit text' } );
 	suffix = parser.suffix;
@@ -49,8 +47,8 @@ defer {
 parser.Parse( source );
 
 
-defer {
-	if( %recover() ) io.writeln( failed.expand( { 'info' => 'Failed to submit text' } ) );
+defer(any) {
+	io.writeln( failed.expand( { 'info' => 'Failed to submit text' } ) );
 }
 
 ret = Text::Commit( title, source, section, '', name, labels, 

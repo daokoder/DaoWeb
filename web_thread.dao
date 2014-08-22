@@ -11,9 +11,9 @@ routine GetThread( space : User, stid : int, comment = 0, edit=0 )
 	coms : list<postcomment> = {};
 	labs : list<label_t> = {};
 	uid2name = { => };
-	user = User::{};
-	txt = Text::{};
-	sptxt = SpaceText::{};
+	user = User.{};
+	txt = Text.{};
+	sptxt = SpaceText.{};
 	if( hd.QueryOnce( sptxt, txt ) ){
 		thd.tid = (string) sptxt.stid;
 		thd.uid = (string) sptxt.uid_author;
@@ -110,15 +110,15 @@ routine MakeThread( thd : postthread, comments : list<postcomment>,
 	topic1 = parts[2].expand( dict_lang ).expand( url_map, '@' );
 	topic2 = parts[3].expand( dict_lang ).expand( url_map, '@' );
 	labcode = '';
-	for( lab in labels ) labcode += labtemp.expand( lab, '@' );
+	for( lab in labels ) labcode += labtemp.expand( (tupkey_t) lab, '@' );
 	thd.labels = labcode;
 	source = "";
 	edit = dict_lang[ "edit" ];
 	if( current_uid == (int)thd.uid ) thd.edit = edit;
 	if( %thd.modify ){
-		source = topic2.expand( thd, "@" );
+		source = topic2.expand( (tupkey_t) thd, "@" );
 	}else{
-		source = topic1.expand( thd, "@" );
+		source = topic1.expand( (tupkey_t) thd, "@" );
 	}
 
 	tempcom1 = parts[4].expand( dict_lang ).expand( url_map, '@' );
@@ -128,11 +128,11 @@ routine MakeThread( thd : postthread, comments : list<postcomment>,
 		com = comments[i];
 		if( (int) com.uid == current_uid ) com.edit = edit;
 		if( com.modify.size() && com.show ==1 ){
-			source += tempcom2.expand( com, "@" );
+			source += tempcom2.expand( (tupkey_t) com, "@" );
 		}else if( com.show ){
-			source += tempcom1.expand( com, "@" );
+			source += tempcom1.expand( (tupkey_t) com, "@" );
 		}else{
-			source += tempcom3.expand( com, "@" );
+			source += tempcom3.expand( (tupkey_t) com, "@" );
 		}
 	}
 	return css + source + prompt;
@@ -142,10 +142,10 @@ routine MakeThread( thd : postthread, comments : list<postcomment>,
 io.writeln( 'content-type: text/html\n\n' );
 
 tid = (int) HTTP_GET[ 'thread' ];
-comment = HTTP_GET.has( 'comment' ) ? (int) HTTP_GET[ 'comment' ] : 0;
+comment = HTTP_GET.find( 'comment' ) != none ? (int) HTTP_GET[ 'comment' ] : 0;
 
 edit = space_owner.uid == User::Current.uid;
-admin = WEB_ADMINS.has( User::Current.username )
+admin = WEB_ADMINS.find( User::Current.username ) != none
 
 tpl =
 @[html]

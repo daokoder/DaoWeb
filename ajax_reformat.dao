@@ -2,21 +2,19 @@
 load web_user
 load web_commit
 
-if( not WEB_ADMINS.has( User::Current.username ) ) return
+if( WEB_ADMINS.find( User::Current.username ) == none ) return
 
 
 tid = 0
-text = Text::{};
+text = Text.{};
 retrieve = web_database.Select( Text ).Where().GE( 'tid' ).Range( 1 )
 update = web_database.Update( Text ).Set( 'preface' ).Set( 'content' ).Where().EQ( 'tid' )
 
 while( retrieve.Bind( tid ).QueryOnce( text ) ){
-	frame {
-		defer {
-			if( e = recover(); e.size() ){
-				io::stderr.writeln( 'failed formating', text.tid, text.title )
-				io::stderr.writeln( 'with error:', e[0].info, e[0].data )
-			}
+	std::exec {
+		defer( Error as e ) {
+			io::stderr.writeln( 'failed formating', text.tid, text.title )
+			io::stderr.writeln( 'with error:', e.info, e.data )
 		}
 		parser = Sdml2Html();
 		parser.Parse( text.source );

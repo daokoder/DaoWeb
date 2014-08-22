@@ -6,11 +6,11 @@ load web_commit
 
 io.writeln( 'content-type: text/html\n' );
 
-edit = HTTP_POST.has( 'edit' ) ? (int) HTTP_POST['edit'] : 0;
-blog = HTTP_POST.has( 'blog' );
-forum = HTTP_POST.has( 'forum' );
-title = HTTP_POST.has( 'title' ) ? HTTP_POST['title'] : '';
-name = HTTP_POST.has( 'name' ) ? HTTP_POST['name'] : '';
+edit = HTTP_POST.find( 'edit' ) != none ? (int) HTTP_POST['edit'] : 0;
+blog = HTTP_POST.find( 'blog' ) != none;
+forum = HTTP_POST.find( 'forum' ) != none;
+title = HTTP_POST.find( 'title' ) != none ? HTTP_POST['title'] : '';
+name = HTTP_POST.find( 'name' ) != none ? HTTP_POST['name'] : '';
 
 uid = User::Current.uid;
 if( uid ==0 || (uid != space_owner.uid && uid != 9) ){ # fu
@@ -34,14 +34,14 @@ for( tok in tokens ){
 		}
 	}
 }
-text = Text::{};
-sptx = SpaceText::{};
+text = Text.{};
+sptx = SpaceText.{};
 web_database.Select( Text ).Where().EQ( 'tid', edit ).QueryOnce( text );
 if( text.name != name ){
-	if( HTTP_POST.has( 'create_version' ) ){
+	if( HTTP_POST.find( 'create_version' ) != none ){
 		Text::Commit( text.title, text.source, '','', name, '', 0,0,0, text.uid_space, text.uid_author );
 		web_database.Select( Text ).Where().EQ( 'name' ).Bind( name ).QueryOnce( text );
-		tv = TextVersion::{ edit, text.tid, name };
+		tv = TextVersion.{ edit, text.tid, name };
 		web_database.Insert( tv );
 		edit = text.tid;
 	}
@@ -69,11 +69,11 @@ if( sptx.blog != blog || sptx.forum != forum )
 	web_database.Update( SpaceText ).Set( 'blog', blog ).Set( 'forum', forum )
 	.Where().EQ( 'tid', edit ).QueryOnce();
 
-if( HTTP_POST.has( 'reformat_text' ) ){
+if( HTTP_POST.find( 'reformat_text' ) != none ){
 	parser = Sdml2Html();
 	web_database.Select( Text ).Where().EQ( 'tid', edit ).QueryOnce( text );
-	frame{
-		defer { recover() }
+	std::exec {
+		defer(any) { }
 		parser.Parse( text.source );
 		hd = web_database.Update( Text ).Set( 'preface', parser.preface.size() )
 			.Set( 'brief' ).Set( 'content' ).Where().EQ( 'tid', edit );

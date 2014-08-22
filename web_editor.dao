@@ -19,15 +19,15 @@ routine ViewEditor( title : string, source : string, section : string, name : st
 	optemp = parts[5].expand( dict_lang );
 	maintemp = parts[6].expand( dict_lang );
 	check_labels = '';
-	for( lab in labels ) check_labels += labtemp2.expand( lab, '@' );
+	for( lab in labels ) check_labels += labtemp2.expand( (tupkey_t) lab, '@' );
 	labtemp = labtemp.expand( { 'check_labels' => check_labels }, '@' );
 	titemp = titemp.expand( { 'title'=> title }, '@' );
-	opts = ( check_blog => check_blog, check_forum => check_forum, name => name );
+	opts = ( check_blog = check_blog, check_forum = check_forum, name = name );
 	optemp = optemp.expand( opts, '@' );
 	optemp = optemp.expand( disabling, '@' );
 	titemp = titemp.expand( disabling, '@' );
 	referer = '';
-	if( HTTP_ENV.has( 'HTTP_REFERER' ) ) referer = HTTP_ENV['HTTP_REFERER'];
+	if( HTTP_ENV.find( 'HTTP_REFERER' ) != none ) referer = HTTP_ENV['HTTP_REFERER'];
 	if( %preview ){
 		parser = Sdml2Html();
 		parser.Parse( preview );
@@ -38,7 +38,7 @@ routine ViewEditor( title : string, source : string, section : string, name : st
 	maintemp = maintemp.expand( kv, '@' );
 
 	src = '';
-	if( src_reply.has( 'source' ) and src_reply[ 'source' ].size() ){
+	if( src_reply.find( 'source' ) != none and src_reply[ 'source' ].size() ){
 		#parser = Sdml2Html();
 		#parser.Parse( src_reply[ 'source' ] );
 		#src_reply[ 'source' ] = parser.hlcode;

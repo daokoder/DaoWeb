@@ -11,11 +11,11 @@ routine MakeRSS( space : User, tid = 0, label = '' )
 	channel = temps[1];
 	item = temps[2];
 	channels = { '', '', '' };
-	user = User::{};
-	txt = Text::{};
-	lab = Label::{};
-	sptext = SpaceText::{};
-	labeling = TextLabeling::{};
+	user = User.{};
+	txt = Text.{};
+	lab = Label.{};
+	sptext = SpaceText.{};
+	labeling = TextLabeling.{};
 	time = time_now - month_in_seconds;
 	hd : any = none;
 	if( %label )
@@ -84,13 +84,13 @@ routine MakeRSS( space : User, tid = 0, label = '' )
 			.Where().EQ( 'tid', tid ).Bind( rss ).Bind( rss, 1 ).QueryOnce();
 	}else if( count ){
 		date = ctime_now.year * 10000 + ctime_now.month * 100 + ctime_now.day;
-		spacetext = SpaceText::{ blog=>0, forum=>0, uid_space=>space.uid, 
-			uid_author=>space.uid, date_create=>date, time_create=>time_now, 
-			name=>rssname, stid_reply=>0 };
+		spacetext = SpaceText.{ blog = 0, forum = 0, uid_space = space.uid, 
+			uid_author = space.uid, date_create = date, time_create = time_now, 
+			name = rssname, stid_reply = 0 };
 		web_database.Insert( spacetext );
-		atext = Text::{ stid=>spacetext.stid, uid_space=>space.uid, uid_author=>space.uid,
-			time_create=>time_now, preface=>0, name=>rssname, 
-			title=>'RSS', brief=>'', source=>'', content=>rss };
+		atext = Text.{ stid = spacetext.stid, uid_space = space.uid, uid_author = space.uid,
+			time_create = time_now, preface = 0, name = rssname, 
+			title = 'RSS', brief = '', source = '', content = rss };
 		web_database.Insert( atext );
 		web_database.Update( SpaceText ).Set( 'stid_first', spacetext.stid )
 			.Set( 'tid', atext.tid ).Where().EQ( 'stid', spacetext.stid ).QueryOnce();
@@ -110,8 +110,8 @@ routine GetRSS( space : User, label = '' )
 	rss_time = 0;
 	blog_time = 0;
 	hd = web_database.Select( Text ).Where().EQ( 'uid_space', space.uid ).EQ( 'name' );
-	txt = Text::{};
-	sptxt = SpaceText::{};
+	txt = Text.{};
+	sptxt = SpaceText.{};
 	if( hd.Bind( rssname ).QueryOnce( txt ) ){
 		rss_time = txt.time_edit ? txt.time_edit : txt.time_create;
 	}
@@ -136,5 +136,5 @@ io.writeln( 'content-type: text/plain\n\n' );
 
 
 label = '';
-if( HTTP_GET.has( 'label' ) ) label = HTTP_GET[ 'label' ];
+if( HTTP_GET.find( 'label' ) != none ) label = HTTP_GET[ 'label' ];
 io.writeln( GetRSS( space_owner, label ) );

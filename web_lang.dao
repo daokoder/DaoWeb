@@ -1,18 +1,18 @@
 
 load web.cgi
 
-global language = 'en';
-global language2 = 'english';
-global web_languages = { 'chinese'=>1, 'english'=>1 }
+var language = 'en';
+var language2 = 'english';
+var web_languages = { 'chinese'=>1, 'english'=>1 }
 
 lang = '';
-if( HTTP_GET.has( 'lang' ) ){
+if( HTTP_GET.find( 'lang' ) != none ){
 	lang = HTTP_GET[ 'lang' ];
-}else if( HTTP_COOKIE.has( 'LANG' ) ){
+}else if( HTTP_COOKIE.find( 'LANG' ) != none ){
 	lang = HTTP_COOKIE[ 'LANG' ];
-}else if( HTTP_ENV.has( 'HTTP_ACCEPT_LANGUAGE' ) ){
+}else if( HTTP_ENV.find( 'HTTP_ACCEPT_LANGUAGE' ) != none ){
 	env = HTTP_ENV[ 'HTTP_ACCEPT_LANGUAGE' ];
-	env.tolower();
+	env.convert( $lower );
 	if( env.find( 'zh' ) >=0 ) lang = 'zh_cn';
 }
 

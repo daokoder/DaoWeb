@@ -8,15 +8,15 @@ load sdml_html;
 
 routine AddLabeling( space : int, stid : int, labels :list<string> ={}, blog=0, post=0 )
 {
-	stext = SpaceText::{};
-	label = Label::{};
+	stext = SpaceText.{};
+	label = Label.{};
 	web_database.Select( SpaceText ).Where().EQ( 'uid_space', space )
 		.EQ( 'stid', stid ).QueryOnce( stext );
 	hd1 = web_database.Select( Label ).Where().EQ( 'uid', space ).EQ( 'name' );
 	hd2 = web_database.Select( TextLabeling ).Where().EQ( 'tid', stext.tid ).EQ( 'lid' );
 	hd3 = web_database.Update( Label ).Add( 'blog_count', blog )
 		.Add( 'post_count', blog ).Where().EQ( 'uid', space ).EQ( 'lid' );
-	labeling = TextLabeling::{ tid => stext.tid };
+	labeling = TextLabeling.{ tid = stext.tid };
 	for( lab in labels ){
 		if( hd1.Bind( lab ).QueryOnce( label ) ){
 			if( hd2.Bind( label.lid ).QueryOnce( labeling ) ==0 ){
@@ -33,15 +33,15 @@ routine AddLabeling( space : int, stid : int, labels :list<string> ={}, blog=0, 
 }
 routine RemoveLabeling( space : int, stid : int, labels :list<string>={}, blog=0, post=0 )
 {
-	stext = SpaceText::{};
-	label = Label::{};
+	stext = SpaceText.{};
+	label = Label.{};
 	web_database.Select( SpaceText ).Where().EQ( 'uid_space', space )
 		.EQ( 'stid', stid ).QueryOnce( stext );
 	hd1 = web_database.Select( Label ).Where().EQ( 'uid', space ).EQ( 'name' );
 	hd2 = web_database.Select( TextLabeling ).Where().EQ( 'tid', stext.tid ).EQ( 'lid' );
 	hd3 = web_database.Update( Label ).Add( 'blog_count', - blog )
 		.Add( 'post_count', - blog ).Where().EQ( 'uid', space ).EQ( 'lid' );
-	labeling = TextLabeling::{ tid => stext.tid };
+	labeling = TextLabeling.{ tid = stext.tid };
 	for( lab in labels ){
 		if( hd1.Bind( lab ).QueryOnce( label ) ){
 			if( hd2.Bind( label.lid ).QueryOnce( labeling ) ){
@@ -67,12 +67,12 @@ if( tid=0 )
 static routine Text::Commit( title : string, source : string, section='', log='', name='', 
 		labels='', stid=0, blog=0, forum=0, space=0, author=0, reply=0 )
 {
-	if( author <=1 ) panic( Exception::Error( 'not logged in' ) );
+	if( author <=1 ) std::error( Exception::Error( 'not logged in' ) );
 	parser = Sdml2Html();
 	time = sys::time();
 	var content = parser.Parse( source );
 	var brief = parser.brief;
-	spacetext = SpaceText::{};
+	spacetext = SpaceText.{};
 	tokens = labels.split( ";" );
 	labeling :list<string> = {};
 	nolabeling :list<string> = {};
@@ -82,7 +82,7 @@ static routine Text::Commit( title : string, source : string, section='', log=''
 		if( tks.size() >=2 ){
 			if( tks[1] == 'true' ){
 				labeling.append( tks[0] );
-				langlab |= web_languages.has( tks[0] )
+				langlab |= web_languages.find( tks[0] ) != none
 			}else{
 				nolabeling.append( tks[0] );
 			}
@@ -101,7 +101,7 @@ static routine Text::Commit( title : string, source : string, section='', log=''
 	hd = web_database.Select( SpaceText ).Where().EQ( 'uid_space', space )
 	.EQ( 'stid', stid ).EQ( 'name' ).EQ( 'blog', blog ).EQ( 'forum', forum ).Bind( name );
 	if( hd.QueryOnce( spacetext ) ){ # modifying a text
-		txt = Text::{};
+		txt = Text.{};
 		web_database.Select( Text ).Where().EQ( 'tid', spacetext.tid ).QueryOnce( txt );
 		if( %section ){
 			parser2 = Sdml2Html();
@@ -127,14 +127,13 @@ static routine Text::Commit( title : string, source : string, section='', log=''
 	}else{ # adding a new text
 		ctime = sys::ctime( time );
 		date = ctime.year * 10000 + ctime.month * 100 + ctime.day;
-		spacetext = SpaceText::{ blog=>blog, forum=>forum, uid_space=>space, 
-			uid_author=>author, date_create=>date, time_create=>time, time_order=>time,
-			name=>name, stid_reply=>reply };
+		spacetext = SpaceText.{ blog = blog, forum = forum, uid_space = space, 
+			uid_author = author, date_create = date, time_create = time, time_order = time,
+			name = name, stid_reply = reply };
 		web_database.Insert( spacetext );
-		atext = Text::{ stid=>spacetext.stid, uid_space=>space, uid_author=>author,
-			time_create=>time, preface=>parser.preface.size(), name=>name, 
-			title=>title, brief=>brief, 
-			source=>source, content=>content };
+		atext = Text.{ stid = spacetext.stid, uid_space = space, uid_author = author,
+			time_create = time, preface = parser.preface.size(), name = name, 
+			title = title, brief = brief, source = source, content = content };
 		web_database.Insert( atext );
 		web_database.Update( SpaceText ).Set( 'stid_first', spacetext.stid )
 			.Set( 'tid', atext.tid ).Where()

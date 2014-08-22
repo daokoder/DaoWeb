@@ -16,8 +16,8 @@ etype = '';
 tid = 0;
 tid_reply = 0;
 section = '';
-if( HTTP_GET.has( 'edit' ) ){
-	tid = frame(0){ (int) HTTP_GET[ 'edit' ] };
+if( HTTP_GET.find( 'edit' ) != none ){
+	tid = std::exec(0){ (int) HTTP_GET[ 'edit' ] };
 	etype = HTTP_GET[ 'edit' ];
 }
 
@@ -29,14 +29,14 @@ if( etype == 'user' ){
 	page = page.expand( dict_lang );
 	
 	status = '';
-	userinfo = UserInfo::{ space_owner.uid };
+	userinfo = UserInfo.{ space_owner.uid };
 	
 	if( HTTP_POST.size() ){
 		oldpwd = HTTP_POST[ 'oldpwd' ];
 		newpwd1 = HTTP_POST[ 'newpwd1' ];
 		newpwd2 = HTTP_POST[ 'newpwd2' ];
 		if( %oldpwd ){
-			oldpwd = encrypt( oldpwd, WEB_PWD_KEY, $hex );
+			oldpwd = xxtea::encrypt( oldpwd, WEB_PWD_KEY, $hex );
 			if( oldpwd != space_owner.password ){
 				status = 'wrong_password';
 			}else if( newpwd1.size() < 6 ){
@@ -44,7 +44,7 @@ if( etype == 'user' ){
 			}else if( newpwd1 != newpwd2 ){
 				status = 'password_unmatch';
 			}else{
-				space_owner.password = encrypt( newpwd1, WEB_PWD_KEY, $hex );
+				space_owner.password = xxtea::encrypt( newpwd1, WEB_PWD_KEY, $hex );
 			}
 		}
 		if( status == '' ){
@@ -78,15 +78,15 @@ if( etype == 'user' ){
 
 
 
-if( HTTP_GET.has( 'reply' ) ) tid_reply = (int) HTTP_GET[ 'reply' ];
-if( HTTP_GET.has( 'section' ) ) section = HTTP_GET[ 'section' ];
+if( HTTP_GET.find( 'reply' ) != none ) tid_reply = (int) HTTP_GET[ 'reply' ];
+if( HTTP_GET.find( 'section' ) != none ) section = HTTP_GET[ 'section' ];
 
 name = ''
 if( etype == 'page' ){
-	uri = HTTP_ENV.has( 'REQUEST_URI' ) ? HTTP_ENV[ 'REQUEST_URI' ] : '/';
+	uri = HTTP_ENV.find( 'REQUEST_URI' ) != none ? HTTP_ENV[ 'REQUEST_URI' ] : '/';
 	caps = uri.capture( '^ / space / %w+ / edit / page / (%w+)' )
 	if( %caps ) name = caps[1]
-	tid = frame(0){ (int) name };
+	tid = std::exec(0){ (int) name };
 }
 if( name.match( '%w' ) != none ) etype = 'page';
 
@@ -124,7 +124,7 @@ switch( etype ){
 if( tid_reply ) for( lab in label_list ) lab.checked = 'disabled';
 
 preview = '';
-if( HTTP_FILE.has( 'source' ) ){
+if( HTTP_FILE.find( 'source' ) != none ){
 	preview = HTTP_FILE[ 'source' ].data.read(-1);
 	source['source'] = preview;
 }

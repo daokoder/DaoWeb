@@ -3,10 +3,10 @@ load web_user
 load web_text
 load web_label
 
-global url_base  = "/space/" + space_owner.username;
-global url_base2 = "/space/" + space_owner.username;
+var url_base  = "/space/" + space_owner.username;
+var url_base2 = "/space/" + space_owner.username;
 
-global url_map = { 
+var url_map = { 
 	"space"     => space_owner.username, 
 	"username"  => User::Current.username,
 	"url_base"  => url_base,
@@ -16,7 +16,7 @@ global url_map = {
 
 
 
-global top_menu_list = { ( "", "", "" ) }; 
+var top_menu_list = { ( "", "", "" ) }; 
 
 if( space_owner.uid > 1 and space_owner.username != WEB_SPACE ){
 	top_menu_list = {
@@ -41,7 +41,7 @@ if( space_owner.uid > 1 and space_owner.username != WEB_SPACE ){
 
 for( it in top_menu_list ) it[1] = it[1].expand( url_map, '@' );
 
-global action_list =
+var action_list =
 {
 	( "$(action)",     "", "" ),
 	( "$(new_post)",   "@(url_base)/edit/blog", "" ),
@@ -54,10 +54,10 @@ if( User::Current.username == 'dao' || User::Current.username == 'fu' )
 
 for( it in action_list ) it[1] = it[1].expand( url_map, '@' );
 
-global label_list : list<label_t> = GetLabels( space_owner.uid );
-global label_string = "";
-if( HTTP_GETS.has( 'labels' ) or HTTP_POSTS.has( 'labels' ) ){
-	lbstr = HTTP_GETS.has( 'labels' ) ? HTTP_GETS[ 'labels' ] : HTTP_POSTS[ 'labels' ];
+var label_list : list<label_t> = GetLabels( space_owner.uid );
+var label_string = "";
+if( HTTP_GETS.find( 'labels' ) != none or HTTP_POSTS.find( 'labels' ) != none ){
+	lbstr = HTTP_GETS.find( 'labels' ) != none ? HTTP_GETS[ 'labels' ] : HTTP_POSTS[ 'labels' ];
 	labels = {=>}
 	for( lbs in lbstr ){
 		tokens = lbs.split( ',' );
@@ -66,21 +66,21 @@ if( HTTP_GETS.has( 'labels' ) or HTTP_POSTS.has( 'labels' ) ){
 		label_string += lbs;
 	}
 	for( lab in label_list ){
-		if( labels.has( lab.name ) ) lab.checked = 'checked';
+		if( labels.find( lab.name ) != none ) lab.checked = 'checked';
 	}
 }
 
-global text_counts : tuple<int,int,list<int>,list<int> > = (0,0,(list<int>){},(list<int>){});
+var text_counts : tuple<int,int,list<int>,list<int> > = (0,0,(list<int>){},(list<int>){});
 
-global archive_year  = 0; #ctime_now.year;
-global archive_month = 0; #ctime_now.month;
-global archive_day   = 0; #ctime_now.day;
+var archive_year  = 0; #ctime_now.year;
+var archive_month = 0; #ctime_now.month;
+var archive_day   = 0; #ctime_now.day;
 
-global calendar_year  = ctime_now.year;
-global calendar_month = ctime_now.month;
-global archive_date   = '';
+var calendar_year  = ctime_now.year;
+var calendar_month = ctime_now.month;
+var archive_date   = '';
 
-if( HTTP_GET.has( 'archive' ) ){
+if( HTTP_GET.find( 'archive' ) != none ){
 	archive = HTTP_GET[ 'archive' ];
 	archive_day = 0;
 	archive_date = archive;
@@ -98,13 +98,13 @@ if( HTTP_GET.has( 'archive' ) ){
 	calendar_year = archive_year;
 	calendar_month = archive_month;
 }
-if( HTTP_GET.has( 'year' ) ){
+if( HTTP_GET.find( 'year' ) != none ){
 	archive_day = 0;
 	archive_year = (int) HTTP_GET[ 'year' ];
 	calendar_year = archive_year;
 	archive_date = HTTP_GET[ 'year' ];
 }
-if( HTTP_GET.has( 'month' ) ){
+if( HTTP_GET.find( 'month' ) != none ){
 	month = HTTP_GET[ 'month' ];
 	archive_month = (int) month;
 	calendar_month = archive_month;
@@ -114,12 +114,12 @@ if( HTTP_GET.has( 'month' ) ){
 text_counts = GetTextStat( space_owner, calendar_year, calendar_month, 0 );
 #io.writeln( text_counts );
 
-global latest_blog = GetLatestText( space_owner, 1 );
-global latest_blogc = GetLatestText( space_owner, 2 );
-global latest_post = GetLatestText( space_owner, 3 );
+var latest_blog = GetLatestText( space_owner, 1 );
+var latest_blogc = GetLatestText( space_owner, 2 );
+var latest_post = GetLatestText( space_owner, 3 );
 
-global forum_post_count = text_counts[1];
-global label_checked = 0;
+var forum_post_count = text_counts[1];
+var label_checked = 0;
 for( lab in label_list ){
 	if( %lab.checked ) label_checked += 1;
 }
@@ -148,7 +148,7 @@ routine MakeNews( blogs : list<news_t>, url_base='' )
 		if( date1 != '' and date1 != time and date2 != '' and date2 != time ) break;
 		news += '<div style="background-color:#' + (i%2 ? 'ECF2FC' : 'E6ECFA')
 		news += ';padding:5px">';
-		url = ( url=> url_base + '/thread/' + thd.tid, time=> time, topic=> thd.topic );
+		url = ( url = url_base + '/thread/' + thd.tid, time = time, topic = thd.topic );
 		news += tpl.expand( url, '@' );
 		news += '</div>';
 		if( date1 == '' ) date1 = time;
@@ -163,7 +163,7 @@ routine MakeNews( blogs : list<news_t>, url_base='' )
 		thd.time = thd.time.fetch( '%d{4}%-%d%d%-%d%d' );
 		if( date3 !='' and date3 != thd.time ) break;
 		if( i ) news += '<div style="margin-top: 5px">';
-		url = ( url=> url_base + '/thread/' + thd.tid, time=> thd.time, topic=> thd.topic );
+		url = ( url = url_base + '/thread/' + thd.tid, time = thd.time, topic = thd.topic );
 		news += tpl.expand( url, '@' );
 		if( i ) news += '</div>';
 		date3 = thd.time;
@@ -220,14 +220,14 @@ routine MakeFrame( title : string, body = '', homepage = 0 )
 	temp_frame = io.read( "::templates/frame.html" );
 	temp_frame = temp_frame.expand( dict_lang, '$' )
 
-	headline = frame('Dao'){ io.read( "::settings/title_" + language + ".html" ).trim() }
-	subtitle = frame(''){ io.read( "::settings/subtitle_" + language + ".html" ).trim() }
+	headline = std.exec('Dao'){ io.read( "::settings/title_" + language + ".html" ).trim() }
+	subtitle = std.exec(''){ io.read( "::settings/subtitle_" + language + ".html" ).trim() }
 	outline  = ""
 	sample   = ""
 
 	if( homepage ){
-		outline = frame(''){ io.read( "::settings/outline_" + language + ".html" ).trim() }
-		sample  = frame(''){ io.read( "::settings/sample_" + language + ".html" ).trim() }
+		outline = std.exec(''){ io.read( "::settings/outline_" + language + ".html" ).trim() }
+		sample  = std.exec(''){ io.read( "::settings/sample_" + language + ".html" ).trim() }
 
 		if( %sample ){
 			sample_elem = @[html]<pre style="max-width:320pt;margin-left:10pt;margin-right:20pt;background-color:#CDD;border: 3px dashed #465;padding:10pt;">@[html]

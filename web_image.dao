@@ -3,12 +3,12 @@ load web_user
 
 name = ''; 
 size = 'medium';
-if( HTTP_GET.has( 'image' ) ) name = HTTP_GET[ 'image' ];
-if( HTTP_GET.has( 'size' ) ) size = HTTP_GET[ 'size' ];
+if( HTTP_GET.find( 'image' ) != none ) name = HTTP_GET[ 'image' ];
+if( HTTP_GET.find( 'size' ) != none ) size = HTTP_GET[ 'size' ];
 idmap = { 'small'=>7, 'medium'=>8, 'large'=>9 };
 
 if( name.size() ){
-   image = Image::{};
+   image = Image.{};
    hd = web_database.Select( Image, idmap[ size ] ).Where()
       .EQ( 'space', space_owner.uid ).EQ( 'name' ).Bind( name );
    if( hd.QueryOnce( image ) ){

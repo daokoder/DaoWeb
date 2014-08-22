@@ -5,7 +5,7 @@ io.writeln( 'content-type: text/plain\n' );
 
 src = '';
 uid = User::Current.uid;
-text = LastEditing::{ uid=>0, time =>0, title =>'', source =>'' }
+text = LastEditing.{ uid = 0, time  = 0, title  = '', source  = '' }
 hd = web_database.Select( LastEditing ).Where().EQ( 'uid', uid ).Sort( 'time', 1 ).Range(5);
 if( hd.QueryOnce( text ) ) src = text.source;
 

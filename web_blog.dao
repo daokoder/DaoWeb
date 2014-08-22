@@ -46,15 +46,15 @@ routine GetBlogs( space : User, year=0, month=0, day=0, page=0, lablist : list<l
 	blogs : list<postthread> = {};
 	labs : list<list<label_t>> = {};
 	uid2name = { => };
-	txtlab = TextLabeling::{};
-	label = Label::{};
-	user = User::{};
-	txt = Text::{};
-	sptxt = SpaceText::{};
+	txtlab = TextLabeling.{};
+	label = Label.{};
+	user = User.{};
+	txt = Text.{};
+	sptxt = SpaceText.{};
 	hd.Query( sptxt, txt, txtlab ){
 		uid2name[ sptxt.uid_author ] = '';
 		#thd = (postthread)('','','','','','','','','','',0,'');
-		thd = postthread::{'','','','','','','','','','',0,''};
+		thd = postthread.{'','','','','','','','','','',0,''};
 		thd.tid = (string) sptxt.stid;
 		thd.uid = (string) sptxt.uid_author;
 		thd.replies = (string) sptxt.count_reply;
@@ -126,9 +126,9 @@ routine MakeBlogs( blogs : list<postthread>, labels : list<list<label_t> >,
 		url = { "url" => url_base + "/thread/" + thd.tid };
 		if( current == (int)thd.uid ) thd.edit = edit;
 		if( thd.modify.size() ){
-			source += topic2.expand( thd, "@" ).expand( url, '@' );
+			source += topic2.expand( (tuple<...:string>)thd, "@" ).expand( url, '@' );
 		}else{
-			source += topic1.expand( thd, "@" ).expand( url, '@' );
+			source += topic1.expand( (tuple<...:string>)thd, "@" ).expand( url, '@' );
 		}
 	}
 	return css + source;
@@ -139,7 +139,7 @@ routine MakeBlogs( blogs : list<postthread>, labels : list<list<label_t> >,
 io.writeln( 'content-type: text/html\n\n' );
 
 page = 0;
-if( HTTP_GET.has( 'page' ) ) page = (int) HTTP_GET['page'];
+if( HTTP_GET.find( 'page' ) != none ) page = (int) HTTP_GET['page'];
 
 data = GetBlogs( space_owner, archive_year, archive_month, archive_day, page, label_list );
 blogs = MakeBlogs( data[0], data[1], url_base2, User::Current.uid, page, data[2] );

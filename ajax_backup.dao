@@ -12,7 +12,7 @@ routine SaveText( uid : int, title : string, source : string )
 {
 	time = sys::time();
 	if( title == '' ) title = FormatTime3( time );
-	text = LastEditing::{ uid=>uid, time => time, title => title, source => source }
+	text = LastEditing.{ uid = uid, time = time, title = title, source = source }
 
 	hd = web_database.Select( LastEditing ).Where().EQ( 'uid', uid ).EQ( 'title' ).Bind( title );
 	if( hd.QueryOnce() ==0 ){
